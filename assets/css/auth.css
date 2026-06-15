@@ -1,0 +1,38 @@
+/* AUTH PAGES */
+.auth-page { padding-top: var(--nav-height); min-height: 100vh; }
+.auth-split { display: grid; grid-template-columns: 1fr 1fr; min-height: calc(100vh - var(--nav-height)); }
+.auth-left { background: var(--navy); position: relative; display: flex; flex-direction: column; justify-content: center; padding: 56px; overflow: hidden; }
+.auth-left::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 500px 500px at 50% 50%, rgba(200,147,26,.1) 0%, transparent 70%); }
+.auth-left-content { position: relative; z-index: 1; }
+.auth-left h2 { font-family: 'Cinzel', serif; font-size: clamp(22px,3vw,34px); color: white; font-weight: 700; margin-bottom: 12px; line-height: 1.2; }
+.auth-left h2 span { color: var(--gold-bright); }
+.auth-left p { font-size: 13px; color: rgba(255,255,255,.55); line-height: 1.7; }
+.auth-feature { display: flex; align-items: center; gap: 9px; color: rgba(255,255,255,.7); font-size: 13px; margin-top: 10px; }
+.auth-feature::before { content: '✦'; color: var(--gold); font-size: 10px; }
+.auth-right { background: var(--bg-primary); display: flex; align-items: center; justify-content: center; padding: 36px 24px; }
+.auth-card { width: 100%; max-width: 420px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 36px; box-shadow: var(--shadow-gold); }
+.auth-logo { text-align: center; margin-bottom: 20px; }
+.auth-logo .om { font-size: 32px; color: var(--saffron); display: block; }
+.auth-logo h3 { font-family: 'Cinzel', serif; font-size: 19px; color: var(--navy); }
+[data-theme="dark"] .auth-logo h3 { color: #E8DCC8; }
+.auth-title { font-family: 'Playfair Display', serif; font-size: 21px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+[data-theme="dark"] .auth-title { color: #E8DCC8; }
+.auth-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
+.social-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 9px; background: var(--bg-card); border: 1px solid var(--border-strong); padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-dark); cursor: pointer; font-family: 'Mulish', sans-serif; transition: var(--transition); margin-bottom: 8px; }
+.social-btn:hover { background: var(--cream-dark); border-color: var(--gold); }
+.auth-divider { text-align: center; font-size: 11px; color: var(--text-muted); margin: 13px 0; position: relative; }
+.auth-divider::before, .auth-divider::after { content: ''; position: absolute; top: 50%; width: calc(50% - 16px); height: 1px; background: var(--border-strong); }
+.auth-divider::before { left: 0; }
+.auth-divider::after { right: 0; }
+.auth-footer { text-align: center; margin-top: 16px; font-size: 12px; color: var(--text-muted); }
+.auth-footer a { color: var(--saffron); font-weight: 700; text-decoration: none; cursor: pointer; }
+.forgot-link { font-size: 11px; color: var(--gold); text-decoration: none; font-weight: 600; }
+.role-tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 20px; }
+.role-tab { padding: 9px 6px; border: 1px solid var(--border-strong); border-radius: 8px; font-size: 11px; font-weight: 700; color: var(--text-muted); cursor: pointer; text-align: center; transition: var(--transition); background: var(--bg-card); font-family: 'Mulish', sans-serif; }
+.role-tab.active { background: var(--navy); color: var(--gold-bright); border-color: var(--navy); }
+.login-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.login-tab { padding: 9px 14px; font-size: 12px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: var(--transition); margin-bottom: -1px; background: none; border-top: none; border-left: none; border-right: none; font-family: 'Mulish', sans-serif; }
+.login-tab.active { color: var(--saffron); border-bottom-color: var(--saffron); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: fadeIn 0.3s ease; }
+@media(max-width:768px){ .auth-split { grid-template-columns: 1fr; } .auth-left { display: none; } }
