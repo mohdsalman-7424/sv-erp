@@ -47,6 +47,7 @@
 
       <div class="tab-panel active">
         <form method="POST" action="<?= site_url('auth/do-forgot-password') ?>">
+          <?= csrf_field() ?>
           <div class="form-group" style="margin-bottom:18px">
             <label class="form-label">Email Address</label>
             <div class="input-wrap">

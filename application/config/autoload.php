@@ -88,7 +88,7 @@ $autoload['drivers'] = array('cache');
 |	$autoload['helper'] = array('url', 'file');
 */
 
-$autoload['helper'] = array('url', 'file', 'general', 'function', 'common', 'sms');
+$autoload['helper'] = array('url', 'file', 'security', 'comman_helper');
 
 
 /*

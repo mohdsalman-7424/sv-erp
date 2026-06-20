@@ -18,6 +18,7 @@ $a_data = !empty($address) ? $address[0] : [];
 </div>
 
 <form method="POST" action="<?= site_url('user/save-profile') ?>">
+  <?= csrf_field() ?>
   <div class="grid-2" style="gap:20px;align-items:start">
     
     <!-- Account & Birth Details -->

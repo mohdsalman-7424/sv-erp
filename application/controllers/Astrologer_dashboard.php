@@ -162,7 +162,19 @@ class Astrologer_dashboard extends CI_Controller {
         $astro = $base['current_astro'];
         $astro_id = !empty($astro) ? $astro['id'] : 0;
 
+        $status = strtolower(trim($status));
+        if (!in_array($status, allowed_consultation_statuses(), TRUE)) {
+            $this->session->set_flashdata('error', 'Invalid consultation status.');
+            redirect('astrologer/orders');
+        }
+
         $this->load->model('consultation_model');
+        $consultation = $this->consultation_model->get_by_id(intval($id));
+        if (empty($consultation) || (int) $consultation['astrologer_id'] !== (int) $astro_id) {
+            $this->session->set_flashdata('error', 'Consultation not found or access denied.');
+            redirect('astrologer/orders');
+        }
+
         $this->consultation_model->update(intval($id), ['status' => $status]);
 
         $this->session->set_flashdata('success', 'Consultation status updated to ' . ucfirst($status) . '.');
@@ -179,8 +191,20 @@ class Astrologer_dashboard extends CI_Controller {
         $astro = $base['current_astro'];
         $astro_id = !empty($astro) ? $astro['id'] : 0;
 
-        $prediction = $this->input->post('prediction');
+        $this->form_validation->set_rules('prediction', 'Prediction', 'required|trim|min_length[10]|max_length[5000]');
+        if ($this->form_validation->run() === FALSE) {
+            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            redirect('astrologer/predictions');
+        }
+
+        $prediction = trim(strip_tags($this->input->post('prediction', TRUE)));
         $this->load->model('prediction_model');
+
+        $record = $this->prediction_model->get_by_id(intval($id));
+        if (empty($record) || (int) $record['astrologer_id'] !== (int) $astro_id) {
+            $this->session->set_flashdata('error', 'Prediction not found or access denied.');
+            redirect('astrologer/predictions');
+        }
         
         $this->prediction_model->update(intval($id), ['prediction' => $prediction]);
         $this->session->set_flashdata('success', 'Prediction reply sent to seeker.');

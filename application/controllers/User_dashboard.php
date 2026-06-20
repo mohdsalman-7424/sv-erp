@@ -88,23 +88,43 @@ class User_dashboard extends CI_Controller {
 
     public function save_profile() {
         $user_id = $this->session->userdata('user_id');
+
+        $this->form_validation->set_rules('name', 'Name', 'required|trim|min_length[2]|max_length[100]');
+        $this->form_validation->set_rules('mobile', 'Mobile', 'required|trim|regex_match[/^[0-9+\-\s]{10,15}$/]');
+        $this->form_validation->set_rules('dob', 'Date of Birth', 'trim');
+        $this->form_validation->set_rules('birth_time', 'Birth Time', 'trim');
+        $this->form_validation->set_rules('birth_place', 'Birth Place', 'trim|max_length[255]');
+        $this->form_validation->set_rules('gender', 'Gender', 'trim|max_length[20]');
+        $this->form_validation->set_rules('marital_status', 'Marital Status', 'trim|max_length[20]');
+        $this->form_validation->set_rules('bio', 'Bio', 'trim|max_length[1000]');
+        $this->form_validation->set_rules('address', 'Address', 'trim|max_length[500]');
+        $this->form_validation->set_rules('city', 'City', 'trim|max_length[100]');
+        $this->form_validation->set_rules('state', 'State', 'trim|max_length[100]');
+        $this->form_validation->set_rules('country', 'Country', 'trim|max_length[100]');
+        $this->form_validation->set_rules('pincode', 'Pincode', 'trim|regex_match[/^[0-9A-Za-z\- ]{0,10}$/]');
+
+        if ($this->form_validation->run() === FALSE) {
+            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            redirect('user/profile');
+        }
+
         $this->load->model(['user_model', 'user_profile_model', 'user_address_model']);
 
-        $name = $this->input->post('name');
-        $mobile = $this->input->post('mobile');
+        $name = trim(strip_tags($this->input->post('name', TRUE)));
+        $mobile = preg_replace('/[^0-9+]/', '', $this->input->post('mobile', TRUE));
         
-        $dob = $this->input->post('dob');
-        $birth_time = $this->input->post('birth_time');
-        $birth_place = $this->input->post('birth_place');
-        $gender = $this->input->post('gender');
-        $marital_status = $this->input->post('marital_status');
-        $bio = $this->input->post('bio');
+        $dob = $this->input->post('dob', TRUE);
+        $birth_time = $this->input->post('birth_time', TRUE);
+        $birth_place = trim(strip_tags($this->input->post('birth_place', TRUE)));
+        $gender = trim(strip_tags($this->input->post('gender', TRUE)));
+        $marital_status = trim(strip_tags($this->input->post('marital_status', TRUE)));
+        $bio = trim(strip_tags($this->input->post('bio', TRUE)));
 
-        $address = $this->input->post('address');
-        $city = $this->input->post('city');
-        $state = $this->input->post('state');
-        $country = $this->input->post('country');
-        $pincode = $this->input->post('pincode');
+        $address = trim(strip_tags($this->input->post('address', TRUE)));
+        $city = trim(strip_tags($this->input->post('city', TRUE)));
+        $state = trim(strip_tags($this->input->post('state', TRUE)));
+        $country = trim(strip_tags($this->input->post('country', TRUE)));
+        $pincode = trim(strip_tags($this->input->post('pincode', TRUE)));
 
         // Update basic user details
         $this->user_model->update($user_id, [
@@ -334,37 +354,7 @@ class User_dashboard extends CI_Controller {
     }
 
     public function recharge_wallet() {
-        $user_id = $this->session->userdata('user_id');
-        $amount = floatval($this->input->post('amount'));
-
-        if ($amount >= 10) {
-            $this->load->model(['wallet_model', 'wallet_transaction_model']);
-            $wallet = $this->wallet_model->get_where(['user_id' => $user_id]);
-
-            if (!empty($wallet)) {
-                $new_balance = $wallet[0]['balance'] + $amount;
-                $this->wallet_model->update($wallet[0]['id'], ['balance' => $new_balance]);
-                $wallet_id = $wallet[0]['id'];
-            } else {
-                $wallet_id = $this->wallet_model->insert([
-                    'user_id' => $user_id,
-                    'balance' => $amount
-                ]);
-            }
-
-            $this->wallet_transaction_model->insert([
-                'wallet_id'    => $wallet_id,
-                'type'         => 'credit',
-                'credit_debit' => 'credit',
-                'amount'       => $amount,
-                'remark'       => 'Wallet deposit'
-            ]);
-
-            $this->session->set_flashdata('success', 'Wallet recharged successfully!');
-        } else {
-            $this->session->set_flashdata('error', 'Minimum recharge amount is ₹10.');
-        }
-
+        $this->session->set_flashdata('error', 'Wallet recharge requires a verified payment gateway. Direct balance credits are disabled for security.');
         redirect('user/wallet');
     }
 

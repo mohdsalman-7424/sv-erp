@@ -80,15 +80,20 @@ function selectChat(idx, userName) {
 
   // Load chat simulation
   const feed = document.getElementById('chatFeed');
-  feed.innerHTML = `
-    <div style="background:rgba(200,147,26,0.08);border:1px solid rgba(200,147,26,0.1);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--gold);text-align:center;">
-      ✨ Consultation started with ${userName} at ${new Date().toLocaleTimeString()} ✨
-    </div>
-    <div style="align-self:flex-start;background:#fff;border:1px solid var(--border);padding:10px 14px;border-radius:12px;max-width:70%;font-size:13px;line-height:1.5;color:var(--text-mid)">
-      <strong style="color:var(--navy);font-size:11px;display:block;margin-bottom:2px">${userName}</strong>
-      Pranam Guru ji. I wanted to ask about my career progression. Am undergoing Rahu Mahadasha right now.
-    </div>
-  `;
+  feed.innerHTML = '';
+  const startBanner = document.createElement('div');
+  startBanner.style.cssText = 'background:rgba(200,147,26,0.08);border:1px solid rgba(200,147,26,0.1);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--gold);text-align:center;';
+  startBanner.textContent = '✨ Consultation started with ' + userName + ' at ' + new Date().toLocaleTimeString() + ' ✨';
+  feed.appendChild(startBanner);
+
+  const userMsg = document.createElement('div');
+  userMsg.style.cssText = 'align-self:flex-start;background:#fff;border:1px solid var(--border);padding:10px 14px;border-radius:12px;max-width:70%;font-size:13px;line-height:1.5;color:var(--text-mid)';
+  const userLabel = document.createElement('strong');
+  userLabel.style.cssText = 'color:var(--navy);font-size:11px;display:block;margin-bottom:2px';
+  userLabel.textContent = userName;
+  userMsg.appendChild(userLabel);
+  userMsg.appendChild(document.createTextNode('Pranam Guru ji. I wanted to ask about my career progression. Am undergoing Rahu Mahadasha right now.'));
+  feed.appendChild(userMsg);
 }
 
 function sendMessage() {
@@ -108,7 +113,14 @@ function sendMessage() {
   myMsg.style.maxWidth = '70%';
   myMsg.style.fontSize = '13px';
   myMsg.style.lineHeight = '1.5';
-  myMsg.innerHTML = `<strong style="color:var(--gold-bright);font-size:11px;display:block;margin-bottom:2px">You</strong> ${msg}`;
+  const label = document.createElement('strong');
+  label.style.color = 'var(--gold-bright)';
+  label.style.fontSize = '11px';
+  label.style.display = 'block';
+  label.style.marginBottom = '2px';
+  label.textContent = 'You';
+  myMsg.appendChild(label);
+  myMsg.appendChild(document.createTextNode(msg));
   feed.appendChild(myMsg);
   
   inp.value = '';

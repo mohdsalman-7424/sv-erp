@@ -81,6 +81,7 @@
       <button class="modal-close" onclick="closeModal('addAstroModal')">✕</button>
     </div>
     <form method="POST" action="<?= site_url('admin/save-astrologer') ?>">
+      <?= csrf_field() ?>
       <div class="form-grid-2">
         <div class="form-group"><label class="form-label">Full Name <span class="req">*</span></label><input class="form-input" name="name" type="text" placeholder="Pt. Rajesh Sharma" required></div>
         <div class="form-group"><label class="form-label">Email <span class="req">*</span></label><input class="form-input" name="email" type="email" placeholder="rajesh@example.com" required></div>
@@ -122,6 +123,7 @@
       <button class="modal-close" onclick="closeModal('editAstroModal')">✕</button>
     </div>
     <form method="POST" action="<?= site_url('admin/save-astrologer') ?>">
+      <?= csrf_field() ?>
       <div class="form-grid-2" id="editAstroForm">
         <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" name="name" type="text" id="editName"></div>
         <div class="form-group"><label class="form-label">City</label><input class="form-input" name="city" type="text" id="editCity"></div>
@@ -200,7 +202,17 @@ if (!empty($astrologers_db)) {
     }
 }
 ?>
-let allAstros = <?php echo json_encode($formatted_astros); ?>;
+let allAstros = <?php echo safe_json_for_js($formatted_astros); ?>;
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 // KPIs
 document.getElementById('kVerified').textContent = allAstros.filter(a=>a.verified).length;
@@ -217,20 +229,20 @@ function renderAstros(list) {
         <td style="font-size:11px;color:var(--text-muted)">${i+1}</td>
         <td>
           <div style="display:flex;align-items:center;gap:9px">
-            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--saffron));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;flex-shrink:0">${a.avatar||a.name[0]}</div>
+            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--saffron));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;flex-shrink:0">${escapeHtml(a.avatar||a.name[0])}</div>
             <div>
-              <div style="font-weight:700;font-size:13px">${a.name}</div>
-              <div style="font-size:10px;color:var(--text-muted)">${a.city||'—'}</div>
+              <div style="font-weight:700;font-size:13px">${escapeHtml(a.name)}</div>
+              <div style="font-size:10px;color:var(--text-muted)">${escapeHtml(a.city||'—')}</div>
             </div>
           </div>
         </td>
         <td style="max-width:160px">
           <div style="display:flex;flex-wrap:wrap;gap:3px">
-            ${(a.expertise||[]).slice(0,2).map(e=>`<span class="tag" style="font-size:9px">${e}</span>`).join('')}
+            ${(a.expertise||[]).slice(0,2).map(e=>`<span class="tag" style="font-size:9px">${escapeHtml(e)}</span>`).join('')}
             ${(a.expertise||[]).length>2?`<span class="tag" style="font-size:9px">+${(a.expertise||[]).length-2}</span>`:''}
           </div>
         </td>
-        <td style="font-size:11px">${(a.languages||[]).join(', ')}</td>
+        <td style="font-size:11px">${escapeHtml((a.languages||[]).join(', '))}</td>
         <td><span class="badge badge-navy">${a.exp} Yrs</span></td>
         <td><span style="color:var(--gold);font-weight:700">⭐ ${a.rating}</span><br><span style="font-size:10px;color:var(--text-muted)">${(a.reviews||0).toLocaleString('en-IN')} reviews</span></td>
         <td style="font-weight:700;color:var(--saffron)">₹${a.chatRate}/min</td>
@@ -238,9 +250,9 @@ function renderAstros(list) {
         <td>${a.online ? '<span class="badge badge-success">● Online</span>' : '<span class="badge badge-warning">⚫ Offline</span>'}</td>
         <td>
           <div style="display:flex;gap:4px;flex-wrap:nowrap">
-            <button class="btn-navy btn-sm" onclick="viewAstro('${a.id}')" title="View">👁</button>
-            <button class="btn-navy btn-sm" style="background:rgba(200,147,26,0.15);color:var(--gold)" onclick="editAstro('${a.id}')" title="Edit">✎</button>
-            <button class="btn-navy btn-sm" style="background:rgba(239,68,68,0.12);color:#EF4444" onclick="deleteAstro('${a.id}','${a.name}')" title="Delete">🗑</button>
+            <button class="btn-navy btn-sm" onclick="viewAstro('${escapeHtml(a.id)}')" title="View">👁</button>
+            <button class="btn-navy btn-sm" style="background:rgba(200,147,26,0.15);color:var(--gold)" onclick="editAstro('${escapeHtml(a.id)}')" title="Edit">✎</button>
+            <button class="btn-navy btn-sm" style="background:rgba(239,68,68,0.12);color:#EF4444" onclick="deleteAstro('${escapeHtml(a.id)}','${escapeHtml(a.name)}')" title="Delete">🗑</button>
           </div>
         </td>
       </tr>

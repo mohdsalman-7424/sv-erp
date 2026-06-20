@@ -62,6 +62,7 @@
       </div>
 
       <form id="regForm" method="POST" action="<?= site_url('auth/do-register') ?>">
+        <?= csrf_field() ?>
         <input type="hidden" name="role" id="regRole" value="user">
         <input type="hidden" name="language" id="regLanguage" value="English">
 

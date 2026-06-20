@@ -12,6 +12,7 @@ $astro = $current_astro;
 </div>
 
 <form method="POST" action="<?= site_url('astrologer/save-profile') ?>">
+  <?= csrf_field() ?>
   <div class="grid-2" style="gap:20px;align-items:start">
 
     <!-- Basic & Expert Info -->

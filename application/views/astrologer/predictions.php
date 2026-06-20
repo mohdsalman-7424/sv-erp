@@ -41,6 +41,7 @@ $predictions = $CI->db->get()->result_array();
               </div>
             <?php else: ?>
               <form method="POST" action="<?= site_url('astrologer/save-prediction/'.$p['id']) ?>">
+                <?= csrf_field() ?>
                 <div class="form-group" style="margin-bottom:10px">
                   <label class="form-label" style="font-size:11px">Write your prediction / reply:</label>
                   <textarea class="form-input" name="prediction" rows="3" placeholder="Analyze charts, planetary transit positions, and write your sacred advice..." required></textarea>

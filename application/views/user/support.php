@@ -72,6 +72,7 @@ $tickets = $CI->support_ticket_model->get_where(['user_id' => $current_user['id'
       <button class="modal-close" onclick="document.getElementById('ticketModal').classList.remove('open')">✕</button>
     </div>
     <form method="POST" action="<?= site_url('user/save-ticket') ?>">
+      <?= csrf_field() ?>
       <div class="form-group" style="margin-bottom:14px">
         <label class="form-label">Subject <span class="req">*</span></label>
         <input class="form-input" type="text" name="subject" placeholder="Wallet balance not credited / Booking error" required>

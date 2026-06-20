@@ -62,6 +62,7 @@ $slots = $CI->db->get_where('astrologer_availability', ['astrologer_id' => $astr
       <button class="modal-close" onclick="document.getElementById('slotModal').classList.remove('open')">✕</button>
     </div>
     <form method="POST" action="<?= site_url('astrologer/save-slot') ?>">
+      <?= csrf_field() ?>
       <div class="form-group" style="margin-bottom:12px">
         <label class="form-label">Day of Week <span class="req">*</span></label>
         <select class="form-select" name="day_name" required>

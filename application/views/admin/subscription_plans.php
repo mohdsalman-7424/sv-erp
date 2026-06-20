@@ -96,6 +96,7 @@
       <button class="modal-close" onclick="closeModal('addPlanModal')">✕</button>
     </div>
     <form method="POST" action="<?= site_url('admin/save-plan') ?>">
+      <?= csrf_field() ?>
       <div class="form-grid-2" style="grid-template-columns:1fr">
         <div class="form-group"><label class="form-label">Plan Name <span class="req">*</span></label><input class="form-input" name="name" type="text" placeholder="Gold Plan" required></div>
         <div class="form-group"><label class="form-label">Price (₹) <span class="req">*</span></label><input class="form-input" name="price" type="number" step="0.01" placeholder="999.00" required></div>
@@ -115,6 +116,7 @@
       <button class="modal-close" onclick="closeModal('editPlanModal')">✕</button>
     </div>
     <form method="POST" action="<?= site_url('admin/save-plan') ?>">
+      <?= csrf_field() ?>
       <input type="hidden" name="id" id="editPlanId">
       <div class="form-grid-2" style="grid-template-columns:1fr">
         <div class="form-group"><label class="form-label">Plan Name <span class="req">*</span></label><input class="form-input" name="name" id="editPlanName" type="text" required></div>

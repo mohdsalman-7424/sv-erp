@@ -84,6 +84,7 @@ $astrologers = $CI->db->get()->result_array();
       <button class="modal-close" onclick="document.getElementById('bookingModal').classList.remove('open')">✕</button>
     </div>
     <form method="POST" action="<?= site_url('user/book-consultation') ?>">
+      <?= csrf_field() ?>
       <div class="form-group" style="margin-bottom:14px">
         <label class="form-label">Select Astrologer <span class="req">*</span></label>
         <select class="form-select" name="astrologer_id" required>

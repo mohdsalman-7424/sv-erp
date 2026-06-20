@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?= $page_title ?></title>
+<title><?= html_escape($page_title) ?></title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700&family=Cinzel:wght@400;600;700&family=Mulish:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/css/nav.css') ?>">
@@ -63,26 +63,27 @@
       <!-- Login Method Tabs -->
       <div class="login-tabs">
         <button type="button" class="login-tab active" onclick="switchTab('email',this)">📧 Email</button>
-        <button type="button" class="login-tab" onclick="switchTab('otp',this)">📱 OTP</button>
-        <button type="button" class="login-tab" onclick="switchTab('social',this)">🌐 Social</button>
+        <!-- <button type="button" class="login-tab" onclick="switchTab('otp',this)">📱 OTP</button>
+        <button type="button" class="login-tab" onclick="switchTab('social',this)">🌐 Social</button> -->
       </div>
 
       <!-- Email Tab -->
       <div class="tab-panel active" id="tab-email">
         <form method="POST" action="<?= site_url('auth/do-login') ?>">
+          <?= csrf_field() ?>
           <input type="hidden" name="role" id="loginRole" value="user">
           <div class="form-group" style="margin-bottom:14px">
             <label class="form-label">Email Address</label>
             <div class="input-wrap">
               <span class="input-icon">📧</span>
-              <input class="form-input" type="email" name="email" id="loginEmail" placeholder="arjun@example.com" value="arjun@example.com" required>
+              <input class="form-input" type="email" name="email" id="loginEmail" placeholder="arjun@example.com" required>
             </div>
           </div>
           <div class="form-group" style="margin-bottom:8px">
             <label class="form-label">Password</label>
             <div class="input-wrap">
               <span class="input-icon">🔒</span>
-              <input class="form-input" type="password" name="password" id="loginPass" placeholder="••••••••" value="password123" required>
+              <input class="form-input" type="password" name="password" id="loginPass" placeholder="••••••••" required minlength="8">
             </div>
           </div>
           <div style="display:flex;justify-content:flex-end;margin-bottom:18px">
@@ -112,7 +113,7 @@
 
       <!-- Demo Credentials -->
       <div style="margin-top:16px;padding:10px 12px;background:var(--gold-pale);border:1px solid var(--border);border-radius:8px;font-size:11px;color:var(--text-mid)">
-        <strong>Demo Credentials:</strong> arjun@example.com / any password
+        Use your registered email and password (minimum 8 characters).
       </div>
 
       <div class="auth-footer">

@@ -66,6 +66,7 @@ $kundalis = $CI->kundali_model->get_where(['user_id' => $current_user['id']]);
       <button class="modal-close" onclick="document.getElementById('kundaliModal').classList.remove('open')">✕</button>
     </div>
     <form method="POST" action="<?= site_url('user/save-kundali') ?>">
+      <?= csrf_field() ?>
       <div class="form-group" style="margin-bottom:12px">
         <label class="form-label">Name <span class="req">*</span></label>
         <input class="form-input" type="text" name="name" placeholder="Arjun Mehta" required>

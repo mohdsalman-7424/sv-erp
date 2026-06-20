@@ -33,6 +33,7 @@ $mock_earnings = $completed_sessions * 350.00; // Average ₹350 per consult
   <div class="page-header-actions" style="display:flex;align-items:center;gap:12px">
     <!-- Status Toggle Button -->
     <form method="POST" action="<?= site_url('astrologer/toggle-status') ?>">
+      <?= csrf_field() ?>
       <?php if (!empty($astro) && $astro['is_online']): ?>
         <button type="submit" class="btn btn-success btn-sm">● Online (Click to go Offline)</button>
       <?php else: ?>

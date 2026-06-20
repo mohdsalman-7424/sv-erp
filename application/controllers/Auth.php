@@ -51,12 +51,21 @@ class Auth extends CI_Controller {
     }
 
     public function do_login() {
-        $email = $this->input->post('email');
+        $this->form_validation->set_rules('email', 'Email', 'required|trim|valid_email|max_length[255]');
+        $this->form_validation->set_rules('password', 'Password', 'required|min_length[8]|max_length[128]');
+        $this->form_validation->set_rules('role', 'Role', 'required|in_list[user,astrologer,admin]');
+
+        if ($this->form_validation->run() === FALSE) {
+            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            redirect('auth/login');
+        }
+
+        $email = strtolower(trim($this->input->post('email', TRUE)));
         $password = $this->input->post('password');
-        $role = $this->input->post('role'); // 'user', 'astrologer', 'admin'
+        $role = $this->input->post('role', TRUE);
 
         // Map role string to role_id
-        $expected_role_id = 3; // default user
+        $expected_role_id = 3;
         if ($role === 'admin') {
             $expected_role_id = 1;
         } elseif ($role === 'astrologer') {
@@ -68,12 +77,12 @@ class Auth extends CI_Controller {
         if (empty($user)) {
             $user = $this->user_model->get_where(['mobile' => $email]);
         }
-
+		
         if (!empty($user)) {
             $user = $user[0];
             if (password_verify($password, $user['password'])) {
                 if ($user['role_id'] == $expected_role_id) {
-                    // Success!
+                    $this->session->sess_regenerate(TRUE);
                     $this->session->set_userdata([
                         'user_id'   => $user['id'],
                         'role_id'   => $user['role_id'],
@@ -103,30 +112,33 @@ class Auth extends CI_Controller {
     }
 
     public function do_register() {
-        $name = $this->input->post('name');
-        $email = $this->input->post('email');
-        $mobile = $this->input->post('mobile');
+        $this->form_validation->set_rules('name', 'Name', 'required|trim|min_length[2]|max_length[100]');
+        $this->form_validation->set_rules('email', 'Email', 'required|trim|valid_email|max_length[255]|is_unique[users.email]');
+        $this->form_validation->set_rules('mobile', 'Mobile', 'required|trim|regex_match[/^[0-9+\-\s]{10,15}$/]|is_unique[users.mobile]');
+        $this->form_validation->set_rules('password', 'Password', 'required|min_length[8]|max_length[128]');
+        $this->form_validation->set_rules('role', 'Role', 'required|in_list[user,astrologer]');
+        $this->form_validation->set_rules('dob', 'Date of Birth', 'trim');
+        $this->form_validation->set_rules('birth_time', 'Birth Time', 'trim');
+        $this->form_validation->set_rules('birth_place', 'Birth Place', 'trim|max_length[255]');
+        $this->form_validation->set_rules('rashi', 'Rashi', 'trim|max_length[50]');
+        $this->form_validation->set_rules('language', 'Language', 'trim|max_length[100]');
+
+        if ($this->form_validation->run() === FALSE) {
+            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            redirect('auth/register');
+        }
+
+        $name = trim(strip_tags($this->input->post('name', TRUE)));
+        $email = strtolower(trim($this->input->post('email', TRUE)));
+        $mobile = preg_replace('/[^0-9+]/', '', $this->input->post('mobile', TRUE));
         $password = $this->input->post('password');
-        $role = $this->input->post('role');
+        $role = $this->input->post('role', TRUE);
         
-        $dob = $this->input->post('dob');
-        $birth_time = $this->input->post('birth_time');
-        $birth_place = $this->input->post('birth_place');
-        $rashi = $this->input->post('rashi');
-        $language = $this->input->post('language');
-
-        // Check if user exists
-        $exist = $this->user_model->get_where(['email' => $email]);
-        if (!empty($exist)) {
-            $this->session->set_flashdata('error', 'Email is already registered.');
-            redirect('auth/register');
-        }
-
-        $exist_mobile = $this->user_model->get_where(['mobile' => $mobile]);
-        if (!empty($exist_mobile)) {
-            $this->session->set_flashdata('error', 'Mobile number is already registered.');
-            redirect('auth/register');
-        }
+        $dob = $this->input->post('dob', TRUE);
+        $birth_time = $this->input->post('birth_time', TRUE);
+        $birth_place = trim(strip_tags($this->input->post('birth_place', TRUE)));
+        $rashi = trim(strip_tags($this->input->post('rashi', TRUE)));
+        $language = trim(strip_tags($this->input->post('language', TRUE)));
 
         $hashed_password = password_hash($password, PASSWORD_BCRYPT);
         $role_id = ($role === 'astrologer') ? 2 : 3;
@@ -181,7 +193,14 @@ class Auth extends CI_Controller {
     }
 
     public function do_forgot_password() {
-        $email = $this->input->post('email');
+        $this->form_validation->set_rules('email', 'Email', 'required|trim|valid_email|max_length[255]');
+
+        if ($this->form_validation->run() === FALSE) {
+            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            redirect('auth/forgot-password');
+        }
+
+        $email = strtolower(trim($this->input->post('email', TRUE)));
         $user = $this->user_model->get_where(['email' => $email]);
 
         if (!empty($user)) {

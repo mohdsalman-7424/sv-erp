@@ -28,6 +28,7 @@ $unpaid_balance = $completed_count * 350.00;
       <div class="card-title">Request Withdrawal</div>
       
       <form method="POST" action="<?= site_url('astrologer/request-withdrawal') ?>">
+        <?= csrf_field() ?>
         <div class="form-group" style="margin-bottom:14px">
           <label class="form-label">Withdrawal Amount (₹) <span class="req">*</span></label>
           <input class="form-input" type="number" name="amount" min="100" max="<?= $unpaid_balance ?>" placeholder="Enter amount to withdraw" required>

@@ -81,13 +81,24 @@ class Admin_dashboard extends CI_Controller {
     }
 
     public function save_user() {
+        $this->form_validation->set_rules('name', 'Name', 'required|trim|min_length[2]|max_length[100]');
+        $this->form_validation->set_rules('email', 'Email', 'required|trim|valid_email|max_length[255]');
+        $this->form_validation->set_rules('phone', 'Phone', 'trim|regex_match[/^[0-9+\-\s]{0,15}$/]');
+        $this->form_validation->set_rules('city', 'City', 'trim|max_length[100]');
+        $this->form_validation->set_rules('rashi', 'Rashi', 'trim|max_length[50]');
+
+        if ($this->form_validation->run() === FALSE) {
+            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            redirect('admin_dashboard/users');
+        }
+
         $this->load->model(['user_model', 'user_profile_model', 'user_address_model', 'wallet_model']);
-        $id = $this->input->post('id');
-        $name = $this->input->post('name');
-        $email = $this->input->post('email');
-        $phone = $this->input->post('phone');
-        $city = $this->input->post('city');
-        $rashi = $this->input->post('rashi');
+        $id = $this->input->post('id', TRUE);
+        $name = trim(strip_tags($this->input->post('name', TRUE)));
+        $email = strtolower(trim($this->input->post('email', TRUE)));
+        $phone = preg_replace('/[^0-9+]/', '', $this->input->post('phone', TRUE));
+        $city = trim(strip_tags($this->input->post('city', TRUE)));
+        $rashi = trim(strip_tags($this->input->post('rashi', TRUE)));
         
         $db_data = [
             'name' => $name,
@@ -99,10 +110,13 @@ class Admin_dashboard extends CI_Controller {
         if ($id && is_numeric($id)) {
             $this->user_model->update($id, $db_data);
             $user_id = $id;
+            $this->session->set_flashdata('success', 'User updated successfully.');
         } else {
-            $db_data['password'] = password_hash('password123', PASSWORD_BCRYPT);
+            $temp_password = generate_temp_password();
+            $db_data['password'] = password_hash($temp_password, PASSWORD_BCRYPT);
             $db_data['status'] = 1;
             $user_id = $this->user_model->insert($db_data);
+            $this->session->set_flashdata('success', 'User created. Temporary password: ' . $temp_password);
         }
 
         // Save address
@@ -143,16 +157,29 @@ class Admin_dashboard extends CI_Controller {
     }
 
     public function save_astrologer() {
+        $this->form_validation->set_rules('name', 'Name', 'required|trim|min_length[2]|max_length[100]');
+        $this->form_validation->set_rules('exp', 'Experience', 'trim|integer|greater_than_equal_to[0]|less_than_equal_to[80]');
+        $this->form_validation->set_rules('rating', 'Rating', 'trim|numeric|greater_than_equal_to[0]|less_than_equal_to[5]');
+        $this->form_validation->set_rules('reviews', 'Reviews', 'trim|integer|greater_than_equal_to[0]');
+        $this->form_validation->set_rules('city', 'City', 'trim|max_length[100]');
+        $this->form_validation->set_rules('languages', 'Languages', 'trim|max_length[255]');
+        $this->form_validation->set_rules('expertise', 'Expertise', 'trim|max_length[255]');
+
+        if ($this->form_validation->run() === FALSE) {
+            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            redirect('admin_dashboard/astrologers');
+        }
+
         $this->load->model(['astrologer_model', 'user_model', 'user_address_model']);
-        $id = $this->input->post('id');
-        $name = $this->input->post('name');
-        $exp = $this->input->post('exp');
-        $rating = $this->input->post('rating');
-        $reviews = $this->input->post('reviews');
+        $id = $this->input->post('id', TRUE);
+        $name = trim(strip_tags($this->input->post('name', TRUE)));
+        $exp = $this->input->post('exp', TRUE);
+        $rating = $this->input->post('rating', TRUE);
+        $reviews = $this->input->post('reviews', TRUE);
         $online = $this->input->post('online') ? 1 : 0;
-        $city = $this->input->post('city');
-        $languages = $this->input->post('languages');
-        $expertise = $this->input->post('expertise');
+        $city = trim(strip_tags($this->input->post('city', TRUE)));
+        $languages = trim(strip_tags($this->input->post('languages', TRUE)));
+        $expertise = trim(strip_tags($this->input->post('expertise', TRUE)));
 
         $user_id = null;
         if ($id && is_numeric($id)) {
@@ -163,13 +190,15 @@ class Admin_dashboard extends CI_Controller {
         if ($user_id) {
             $this->user_model->update($user_id, ['name' => $name]);
         } else {
+            $temp_password = generate_temp_password();
             $user_id = $this->user_model->insert([
                 'name' => $name,
                 'email' => strtolower(url_title($name)) . '@astroveda.in',
-                'password' => password_hash('password123', PASSWORD_BCRYPT),
+                'password' => password_hash($temp_password, PASSWORD_BCRYPT),
                 'role_id' => 2,
                 'status' => 1
             ]);
+            $this->session->set_flashdata('success', 'Astrologer created. Temporary password: ' . $temp_password);
         }
 
         $astro_data = [
@@ -219,12 +248,22 @@ class Admin_dashboard extends CI_Controller {
     }
 
     public function save_plan() {
+        $this->form_validation->set_rules('name', 'Plan Name', 'required|trim|min_length[2]|max_length[100]');
+        $this->form_validation->set_rules('price', 'Price', 'required|numeric|greater_than_equal_to[0]');
+        $this->form_validation->set_rules('duration', 'Duration', 'required|integer|greater_than[0]|less_than_equal_to[3650]');
+        $this->form_validation->set_rules('features', 'Features', 'trim|max_length[1000]');
+
+        if ($this->form_validation->run() === FALSE) {
+            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            redirect('admin_dashboard/subscription_plans');
+        }
+
         $this->load->model(['subscription_plan_model']);
-        $id = $this->input->post('id');
-        $name = $this->input->post('name');
-        $price = $this->input->post('price');
-        $duration = $this->input->post('duration');
-        $features = $this->input->post('features');
+        $id = $this->input->post('id', TRUE);
+        $name = trim(strip_tags($this->input->post('name', TRUE)));
+        $price = $this->input->post('price', TRUE);
+        $duration = $this->input->post('duration', TRUE);
+        $features = trim(strip_tags($this->input->post('features', TRUE)));
 
         $db_data = [
             'name' => $name,

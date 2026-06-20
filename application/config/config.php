@@ -1179,7 +1179,7 @@ $config['cache_query_string'] = FALSE;
 
 
 
-$config['encryption_key'] = '';
+$config['encryption_key'] = 'sv_erp_a8f3c2e1b9d7046f5a2e8c1b3d9f0a7e';
 
 
 
@@ -1387,11 +1387,10 @@ $config['sess_cookie_name'] = 'ci_session';
 
 
 
-//$config['sess_expiration'] = 7200;
-$config['sess_expiration'] = 0;
+$config['sess_expiration'] = 7200;
 
 
-$config['sess_save_path'] = 'ci_session';
+$config['sess_save_path'] = APPPATH . 'sessions';
 
 
 
@@ -1479,16 +1478,15 @@ $config['cookie_domain']    = '';
 
 
 
-// $config['cookie_path']		= '/';
-$config['cookie_path']      = '/; SameSite=None';
+$config['cookie_path']      = '/';
 
 
 
-$config['cookie_secure']    = TRUE;
+$config['cookie_secure']    = FALSE;
 
 
 
-$config['cookie_httponly']     = FALSE;
+$config['cookie_httponly']     = TRUE;
 
 
 
@@ -1664,15 +1662,15 @@ $config['global_xss_filtering'] = FALSE;
 
 
 
-$config['csrf_protection'] = FALSE;
+$config['csrf_protection'] = TRUE;
 
 
 
-$config['csrf_token_name'] = 'csrf_test_name';
+$config['csrf_token_name'] = 'sv_csrf_token';
 
 
 
-$config['csrf_cookie_name'] = 'csrf_cookie_name';
+$config['csrf_cookie_name'] = 'sv_csrf_cookie';
 
 
 
@@ -1684,7 +1682,7 @@ $config['csrf_regenerate'] = TRUE;
 
 
 
-$config['csrf_exclude_uris'] = array();
+$config['csrf_exclude_uris'] = array('api/.+');
 
 
 

@@ -64,6 +64,7 @@
       <button class="modal-close">✕</button>
     </div>
     <form method="POST" action="<?= site_url('admin/save-user') ?>">
+      <?= csrf_field() ?>
       <div class="form-grid-2">
         <div class="form-group"><label class="form-label">Full Name <span class="req">*</span></label><input class="form-input" name="name" type="text" placeholder="Rahul Kumar" required></div>
         <div class="form-group"><label class="form-label">Email <span class="req">*</span></label><input class="form-input" name="email" type="email" placeholder="rahul@example.com" required></div>
@@ -120,25 +121,35 @@ if (!empty($users_db)) {
     }
 }
 ?>
-const users = <?php echo json_encode($formatted_users); ?>;
+const users = <?php echo safe_json_for_js($formatted_users); ?>;
 const plans = {U001:'Devotee',U002:'Gold Yogi',U003:'None'};
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 function renderUsers() {
   document.getElementById('usersBody').innerHTML = users.map(u => `
     <tr>
       <td><div style="display:flex;align-items:center;gap:9px">
-        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--saffron));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:12px;flex-shrink:0">${u.avatar}</div>
-        <div><div style="font-weight:700;font-size:13px">${u.name}</div><div style="font-size:10px;color:var(--text-muted)">${u.email}</div></div>
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--saffron));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:12px;flex-shrink:0">${escapeHtml(u.avatar)}</div>
+        <div><div style="font-weight:700;font-size:13px">${escapeHtml(u.name)}</div><div style="font-size:10px;color:var(--text-muted)">${escapeHtml(u.email)}</div></div>
       </div></td>
-      <td>${u.phone}</td>
-      <td>${u.city}</td>
-      <td><span class="tag">${u.rashi}</span></td>
-      <td style="font-weight:700;color:var(--saffron)">₹${u.wallet}</td>
+      <td>${escapeHtml(u.phone)}</td>
+      <td>${escapeHtml(u.city)}</td>
+      <td><span class="tag">${escapeHtml(u.rashi)}</span></td>
+      <td style="font-weight:700;color:var(--saffron)">₹${escapeHtml(u.wallet)}</td>
       <td><span class="badge badge-navy">None</span></td>
-      <td style="font-size:11px;color:var(--text-muted)">${u.joined}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${escapeHtml(u.joined)}</td>
       <td>
         <div style="display:flex;gap:5px">
-          <button class="btn-navy btn-sm" onclick="viewUser('${u.id}')">View</button>
+          <button class="btn-navy btn-sm" onclick="viewUser('${escapeHtml(u.id)}')">View</button>
           <button class="btn btn-danger btn-sm" style="width:auto;padding:6px 10px" onclick="Toast.show('User deactivated','info')">🚫</button>
         </div>
       </td>
@@ -151,15 +162,15 @@ function viewUser(id) {
   if (!u) return;
   document.getElementById('viewUserBody').innerHTML = `
     <div style="text-align:center;padding:16px 0 24px">
-      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--saffron));display:flex;align-items:center;justify-content:center;color:white;font-family:'Cinzel',serif;font-size:24px;font-weight:700;margin:0 auto 12px;box-shadow:0 0 0 3px rgba(200,147,26,0.3)">${u.avatar}</div>
-      <div style="font-family:'Playfair Display',serif;font-size:19px;font-weight:700">${u.name}</div>
-      <div style="font-size:11px;color:var(--text-muted)">${u.email}</div>
+      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--saffron));display:flex;align-items:center;justify-content:center;color:white;font-family:'Cinzel',serif;font-size:24px;font-weight:700;margin:0 auto 12px;box-shadow:0 0 0 3px rgba(200,147,26,0.3)">${escapeHtml(u.avatar)}</div>
+      <div style="font-family:'Playfair Display',serif;font-size:19px;font-weight:700">${escapeHtml(u.name)}</div>
+      <div style="font-size:11px;color:var(--text-muted)">${escapeHtml(u.email)}</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div style="background:var(--gold-pale);border:1px solid var(--border);border-radius:8px;padding:12px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">Phone</div><div style="font-weight:700">${u.phone}</div></div>
-      <div style="background:var(--gold-pale);border:1px solid var(--border);border-radius:8px;padding:12px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">City</div><div style="font-weight:700">${u.city}</div></div>
-      <div style="background:var(--gold-pale);border:1px solid var(--border);border-radius:8px;padding:12px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">Rashi</div><div style="font-weight:700">${u.rashi}</div></div>
-      <div style="background:var(--gold-pale);border:1px solid var(--border);border-radius:8px;padding:12px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">Wallet</div><div style="font-weight:700;color:var(--saffron)">₹${u.wallet}</div></div>
+      <div style="background:var(--gold-pale);border:1px solid var(--border);border-radius:8px;padding:12px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">Phone</div><div style="font-weight:700">${escapeHtml(u.phone)}</div></div>
+      <div style="background:var(--gold-pale);border:1px solid var(--border);border-radius:8px;padding:12px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">City</div><div style="font-weight:700">${escapeHtml(u.city)}</div></div>
+      <div style="background:var(--gold-pale);border:1px solid var(--border);border-radius:8px;padding:12px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">Rashi</div><div style="font-weight:700">${escapeHtml(u.rashi)}</div></div>
+      <div style="background:var(--gold-pale);border:1px solid var(--border);border-radius:8px;padding:12px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">Wallet</div><div style="font-weight:700;color:var(--saffron)">₹${escapeHtml(u.wallet)}</div></div>
     </div>
     <div style="display:flex;gap:10px;margin-top:18px">
       <button class="btn btn-primary" style="flex:1" onclick="Toast.show('Email sent to user','success')">📧 Email User</button>

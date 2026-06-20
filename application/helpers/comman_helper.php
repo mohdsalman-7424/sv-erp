@@ -220,3 +220,7 @@ if ( !function_exists('get_data_last_date') ) {
             
         }
     }
+	function pr($data=null){
+		echo "<pre>";
+		print_r($data);
+	}

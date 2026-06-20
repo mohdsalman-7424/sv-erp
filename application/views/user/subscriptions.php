@@ -88,6 +88,7 @@ $balance = !empty($wallet) ? $wallet[0]['balance'] : 0.00;
             <button class="btn btn-secondary w-100" disabled>Active Plan</button>
           <?php else: ?>
             <form method="POST" action="<?= site_url('user/purchase-plan') ?>">
+              <?= csrf_field() ?>
               <input type="hidden" name="plan_id" value="<?= $p['id'] ?>">
               <button type="submit" class="btn btn-primary w-100" onclick="return confirm('Subscribe to <?= html_escape($p['name']) ?> for ₹<?= number_format($p['price'], 2) ?>?')">
                 Subscribe Now

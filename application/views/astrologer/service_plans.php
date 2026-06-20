@@ -61,6 +61,7 @@ $plans = $CI->astrologer_plan_model->get_where(['astrologer_id' => $astro_id]);
       <button class="modal-close" onclick="document.getElementById('planModal').classList.remove('open')">✕</button>
     </div>
     <form method="POST" action="<?= site_url('astrologer/save-plan') ?>">
+      <?= csrf_field() ?>
       <div class="form-group" style="margin-bottom:12px">
         <label class="form-label">Plan Title <span class="req">*</span></label>
         <input class="form-input" type="text" name="title" placeholder="Detailed Kundali Match report / 30 Min Video chat" required>

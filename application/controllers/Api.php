@@ -3,9 +3,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Api extends CI_Controller {
 
+    private $public_read_collections = ['plans', 'products', 'astrologers', 'blogs'];
+
     public function __construct() {
         parent::__construct();
-        // Load all database models
         $this->load->model([
             'user_model',
             'user_profile_model',
@@ -20,29 +21,53 @@ class Api extends CI_Controller {
             'blog_model'
         ]);
         $this->load->helper('url');
+        $this->load->library('session');
     }
 
-    /**
-     * Set JSON content type and return response.
-     */
-    private function _json($data) {
+    private function _json($data, $status = 200) {
         $this->output
+            ->set_status_header($status)
             ->set_content_type('application/json')
             ->set_output(json_encode($data));
+    }
+
+    private function _require_login() {
+        if (!$this->session->userdata('logged_in')) {
+            $this->_json(['error' => 'Authentication required'], 401);
+            exit;
+        }
+    }
+
+    private function _require_admin() {
+        $this->_require_login();
+        if ((int) $this->session->userdata('role_id') !== 1) {
+            $this->_json(['error' => 'Admin access required'], 403);
+            exit;
+        }
+    }
+
+    private function _sanitize_role_id($role) {
+        if ($role === 'admin') {
+            return 1;
+        }
+        if ($role === 'astrologer') {
+            return 2;
+        }
+        return 3;
     }
 
     /**
      * Map database user record to expected frontend schema.
      */
-    private function _map_user($db_user) {
+    private function _map_user($db_user, $include_sensitive = false) {
         if (!$db_user) return null;
-        
+
         $profile = $this->user_profile_model->get_where(['user_id' => $db_user['id']]);
         $profile = !empty($profile) ? $profile[0] : null;
-        
+
         $address = $this->user_address_model->get_where(['user_id' => $db_user['id']]);
         $address = !empty($address) ? $address[0] : null;
-        
+
         $wallet = $this->wallet_model->get_where(['user_id' => $db_user['id']]);
         if (empty($wallet)) {
             $wallet_id = $this->wallet_model->insert([
@@ -54,10 +79,10 @@ class Api extends CI_Controller {
             $wallet = $wallet[0];
         }
 
-        return [
+        $mapped = [
             'id' => $db_user['id'],
             'name' => $db_user['name'],
-            'email' => $db_user['email'],
+            'email' => $include_sensitive ? $db_user['email'] : null,
             'phone' => $db_user['mobile'] ? $db_user['mobile'] : '',
             'city' => $address ? $address['city'] : 'Mumbai',
             'rashi' => ($profile && $profile['bio']) ? $profile['bio'] : 'Mesh',
@@ -66,6 +91,12 @@ class Api extends CI_Controller {
             'avatar' => strtoupper(substr($db_user['name'], 0, 1)),
             'role' => intval($db_user['role_id']) === 1 ? 'admin' : (intval($db_user['role_id']) === 2 ? 'astrologer' : 'user')
         ];
+
+        if (!$include_sensitive) {
+            unset($mapped['email']);
+        }
+
+        return $mapped;
     }
 
     /**
@@ -75,7 +106,7 @@ class Api extends CI_Controller {
         if (!$db_astro) return null;
         $user = $this->user_model->get_by_id($db_astro['user_id']);
         if (!$user) return null;
-        
+
         $address = $this->user_address_model->get_where(['user_id' => $user['id']]);
         $address = !empty($address) ? $address[0] : null;
 
@@ -179,13 +210,17 @@ class Api extends CI_Controller {
     }
 
     /**
-     * Get all items in a collection.
+     * Get items in a collection.
      */
     public function get() {
-        $collection = $this->input->get('collection');
+        $collection = $this->input->get('collection', TRUE);
         if (!$collection) {
             $this->_json([]);
             return;
+        }
+
+        if (!in_array($collection, $this->public_read_collections, TRUE)) {
+            $this->_require_admin();
         }
 
         $result = [];
@@ -194,11 +229,11 @@ class Api extends CI_Controller {
             case 'users':
                 $users = $this->user_model->get_all();
                 foreach ($users as $u) {
-                    $result[] = $this->_map_user($u);
+                    $result[] = $this->_map_user($u, TRUE);
                 }
                 break;
             case 'astrologers':
-                $astros = $this->astrologer_model->get_all();
+                $astros = $this->astrologer_model->get_where(['approval_status' => 'approved']);
                 foreach ($astros as $a) {
                     $item = $this->_map_astrologer($a);
                     if ($item) $result[] = $item;
@@ -240,6 +275,9 @@ class Api extends CI_Controller {
                     $result[] = $this->_map_blog($b);
                 }
                 break;
+            default:
+                $this->_json(['error' => 'Invalid collection'], 400);
+                return;
         }
 
         $this->_json($result);
@@ -249,9 +287,11 @@ class Api extends CI_Controller {
      * Save/Update an item in a collection.
      */
     public function save() {
-        $collection = $this->input->get('collection');
+        $this->_require_admin();
+
+        $collection = $this->input->get('collection', TRUE);
         if (!$collection) {
-            $this->_json(['status' => false]);
+            $this->_json(['status' => false], 400);
             return;
         }
 
@@ -281,41 +321,45 @@ class Api extends CI_Controller {
                 $this->save_blog();
                 break;
             default:
-                $this->_json(['status' => false]);
+                $this->_json(['status' => false], 400);
                 break;
         }
     }
 
     private function save_user() {
         $input = json_decode($this->input->raw_input_stream, true);
-        if (!$input) {
-            $this->_json(['status' => false]);
+        if (!$input || empty($input['name']) || empty($input['email'])) {
+            $this->_json(['status' => false, 'error' => 'Name and email are required'], 400);
+            return;
+        }
+
+        if (!filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
+            $this->_json(['status' => false, 'error' => 'Invalid email address'], 400);
             return;
         }
 
         $id = isset($input['id']) ? $input['id'] : null;
         $db_data = [
-            'name' => $input['name'],
-            'email' => $input['email'],
-            'mobile' => isset($input['phone']) ? $input['phone'] : '',
-            'role_id' => (isset($input['role']) && $input['role'] === 'admin') ? 1 : ((isset($input['role']) && $input['role'] === 'astrologer') ? 2 : 3)
+            'name' => trim(strip_tags($input['name'])),
+            'email' => strtolower(trim($input['email'])),
+            'mobile' => isset($input['phone']) ? preg_replace('/[^0-9+]/', '', $input['phone']) : '',
+            'role_id' => $this->_sanitize_role_id(isset($input['role']) ? $input['role'] : 'user')
         ];
 
-        // If it starts with non-numeric (like U001 demo placeholder), we treat it as insert
         if ($id && is_numeric($id)) {
+            unset($db_data['role_id']);
             $this->user_model->update($id, $db_data);
             $user_id = $id;
         } else {
-            $db_data['password'] = password_hash('password123', PASSWORD_BCRYPT);
+            $db_data['password'] = password_hash(generate_temp_password(), PASSWORD_BCRYPT);
             $db_data['status'] = 1;
             $user_id = $this->user_model->insert($db_data);
         }
 
-        // Save address
         $address = $this->user_address_model->get_where(['user_id' => $user_id]);
         $addr_data = [
             'user_id' => $user_id,
-            'city' => isset($input['city']) ? $input['city'] : 'Mumbai',
+            'city' => isset($input['city']) ? trim(strip_tags($input['city'])) : 'Mumbai',
         ];
         if (!empty($address)) {
             $this->user_address_model->update($address[0]['id'], $addr_data);
@@ -323,11 +367,10 @@ class Api extends CI_Controller {
             $this->user_address_model->insert($addr_data);
         }
 
-        // Save profile
         $profile = $this->user_profile_model->get_where(['user_id' => $user_id]);
         $prof_data = [
             'user_id' => $user_id,
-            'bio' => isset($input['rashi']) ? $input['rashi'] : 'Mesh',
+            'bio' => isset($input['rashi']) ? trim(strip_tags($input['rashi'])) : 'Mesh',
         ];
         if (!empty($profile)) {
             $this->user_profile_model->update($profile[0]['id'], $prof_data);
@@ -335,31 +378,27 @@ class Api extends CI_Controller {
             $this->user_profile_model->insert($prof_data);
         }
 
-        // Save wallet
         $wallet = $this->wallet_model->get_where(['user_id' => $user_id]);
-        $wallet_data = [
-            'user_id' => $user_id,
-            'balance' => isset($input['wallet']) ? floatval($input['wallet']) : 0.00
-        ];
-        if (!empty($wallet)) {
-            $this->wallet_model->update($wallet[0]['id'], $wallet_data);
-        } else {
-            $this->wallet_model->insert($wallet_data);
+        if (empty($wallet)) {
+            $this->wallet_model->insert([
+                'user_id' => $user_id,
+                'balance' => isset($input['wallet']) ? floatval($input['wallet']) : 0.00
+            ]);
         }
 
         $new_user = $this->user_model->get_by_id($user_id);
-        $this->_json($this->_map_user($new_user));
+        $this->_json($this->_map_user($new_user, TRUE));
     }
 
     private function save_astrologer() {
         $input = json_decode($this->input->raw_input_stream, true);
-        if (!$input) {
-            $this->_json(['status' => false]);
+        if (!$input || empty($input['name'])) {
+            $this->_json(['status' => false, 'error' => 'Name is required'], 400);
             return;
         }
 
         $id = isset($input['id']) ? $input['id'] : null;
-        
+
         $user_id = null;
         if ($id && is_numeric($id)) {
             $astro = $this->astrologer_model->get_by_id($id);
@@ -367,7 +406,7 @@ class Api extends CI_Controller {
         }
 
         $user_data = [
-            'name' => $input['name'],
+            'name' => trim(strip_tags($input['name'])),
             'role_id' => 2
         ];
 
@@ -375,7 +414,7 @@ class Api extends CI_Controller {
             $this->user_model->update($user_id, $user_data);
         } else {
             $user_data['email'] = strtolower(url_title($input['name'])) . '@astroveda.in';
-            $user_data['password'] = password_hash('password123', PASSWORD_BCRYPT);
+            $user_data['password'] = password_hash(generate_temp_password(), PASSWORD_BCRYPT);
             $user_data['status'] = 1;
             $user_id = $this->user_model->insert($user_data);
         }
@@ -386,8 +425,8 @@ class Api extends CI_Controller {
             'rating' => isset($input['rating']) ? floatval($input['rating']) : 4.5,
             'total_reviews' => isset($input['reviews']) ? intval($input['reviews']) : 0,
             'is_online' => (isset($input['online']) && $input['online']) ? 1 : 0,
-            'languages' => isset($input['languages']) ? (is_array($input['languages']) ? implode(',', $input['languages']) : $input['languages']) : 'Hindi,English',
-            'expertise' => isset($input['expertise']) ? (is_array($input['expertise']) ? implode(',', $input['expertise']) : $input['expertise']) : 'Vedic Jyotish',
+            'languages' => isset($input['languages']) ? (is_array($input['languages']) ? implode(',', array_map('strip_tags', $input['languages'])) : strip_tags($input['languages'])) : 'Hindi,English',
+            'expertise' => isset($input['expertise']) ? (is_array($input['expertise']) ? implode(',', array_map('strip_tags', $input['expertise'])) : strip_tags($input['expertise'])) : 'Vedic Jyotish',
             'approval_status' => (isset($input['verified']) && $input['verified']) ? 'approved' : 'pending'
         ];
 
@@ -398,11 +437,10 @@ class Api extends CI_Controller {
             $astro_id = $this->astrologer_model->insert($astro_data);
         }
 
-        // Save address
         $address = $this->user_address_model->get_where(['user_id' => $user_id]);
         $addr_data = [
             'user_id' => $user_id,
-            'city' => isset($input['city']) ? $input['city'] : 'Varanasi',
+            'city' => isset($input['city']) ? trim(strip_tags($input['city'])) : 'Varanasi',
         ];
         if (!empty($address)) {
             $this->user_address_model->update($address[0]['id'], $addr_data);
@@ -416,9 +454,13 @@ class Api extends CI_Controller {
 
     private function save_plan() {
         $input = json_decode($this->input->raw_input_stream, true);
+        if (!$input || empty($input['name'])) {
+            $this->_json(['status' => false], 400);
+            return;
+        }
         $id = isset($input['id']) ? $input['id'] : null;
         $db_data = [
-            'name' => $input['name'],
+            'name' => trim(strip_tags($input['name'])),
             'price' => floatval($input['price']),
             'duration' => isset($input['duration']) ? intval($input['duration']) : 30,
             'features' => isset($input['features']) ? json_encode($input['features']) : null,
@@ -434,11 +476,15 @@ class Api extends CI_Controller {
 
     private function save_subscription() {
         $input = json_decode($this->input->raw_input_stream, true);
+        if (!$input) {
+            $this->_json(['status' => false], 400);
+            return;
+        }
         $id = isset($input['id']) ? $input['id'] : null;
         $db_data = [
-            'user_id' => $input['userId'],
-            'plan_id' => $input['planId'],
-            'status' => $input['status'],
+            'user_id' => intval($input['userId']),
+            'plan_id' => intval($input['planId']),
+            'status' => strip_tags($input['status']),
             'start_date' => $input['startDate'],
             'end_date' => $input['endDate']
         ];
@@ -452,12 +498,16 @@ class Api extends CI_Controller {
 
     private function save_product() {
         $input = json_decode($this->input->raw_input_stream, true);
+        if (!$input || empty($input['name'])) {
+            $this->_json(['status' => false], 400);
+            return;
+        }
         $id = isset($input['id']) ? $input['id'] : null;
         $db_data = [
-            'name' => $input['name'],
+            'name' => trim(strip_tags($input['name'])),
             'price' => floatval($input['price']),
             'stock' => isset($input['stock']) ? intval($input['stock']) : 10,
-            'description' => isset($input['desc']) ? $input['desc'] : '',
+            'description' => isset($input['desc']) ? trim(strip_tags($input['desc'])) : '',
             'category_id' => 1
         ];
         if ($id && is_numeric($id)) {
@@ -470,45 +520,54 @@ class Api extends CI_Controller {
 
     private function save_transaction() {
         $input = json_decode($this->input->raw_input_stream, true);
+        if (!$input) {
+            $this->_json(['status' => false], 400);
+            return;
+        }
         $id = isset($input['id']) ? $input['id'] : null;
-        
-        $wallet = $this->wallet_model->get_where(['user_id' => $input['userId']]);
+
+        $wallet = $this->wallet_model->get_where(['user_id' => intval($input['userId'])]);
         if (empty($wallet)) {
-            $wallet_id = $this->wallet_model->insert(['user_id' => $input['userId'], 'balance' => 0.00]);
+            $wallet_id = $this->wallet_model->insert(['user_id' => intval($input['userId']), 'balance' => 0.00]);
         } else {
             $wallet_id = $wallet[0]['id'];
         }
 
+        $type = in_array($input['type'], ['credit', 'debit'], TRUE) ? $input['type'] : 'credit';
         $db_data = [
             'wallet_id' => $wallet_id,
-            'credit_debit' => $input['type'],
-            'remark' => $input['desc'],
+            'credit_debit' => $type,
+            'remark' => trim(strip_tags($input['desc'])),
             'amount' => floatval($input['amount'])
         ];
         if ($id && is_numeric($id)) {
             $this->wallet_transaction_model->update($id, $db_data);
         } else {
             $id = $this->wallet_transaction_model->insert($db_data);
-            
+
             $w = $this->wallet_model->get_by_id($wallet_id);
             $new_balance = floatval($w['balance']);
-            if ($input['type'] === 'credit') {
+            if ($type === 'credit') {
                 $new_balance += floatval($input['amount']);
             } else {
                 $new_balance -= floatval($input['amount']);
             }
-            $this->wallet_model->update($wallet_id, ['balance' => $new_balance]);
+            $this->wallet_model->update($wallet_id, ['balance' => max(0, $new_balance)]);
         }
         $this->_json($this->_map_transaction($this->wallet_transaction_model->get_by_id($id)));
     }
 
     private function save_notification() {
         $input = json_decode($this->input->raw_input_stream, true);
+        if (!$input || empty($input['title'])) {
+            $this->_json(['status' => false], 400);
+            return;
+        }
         $id = isset($input['id']) ? $input['id'] : null;
         $db_data = [
-            'user_id' => isset($input['userId']) ? $input['userId'] : 1,
-            'title' => $input['title'],
-            'message' => $input['desc'],
+            'user_id' => isset($input['userId']) ? intval($input['userId']) : 1,
+            'title' => trim(strip_tags($input['title'])),
+            'message' => trim(strip_tags($input['desc'])),
             'is_read' => (isset($input['unread']) && !$input['unread']) ? 1 : 0
         ];
         if ($id && is_numeric($id)) {
@@ -521,11 +580,15 @@ class Api extends CI_Controller {
 
     private function save_blog() {
         $input = json_decode($this->input->raw_input_stream, true);
+        if (!$input || empty($input['title'])) {
+            $this->_json(['status' => false], 400);
+            return;
+        }
         $id = isset($input['id']) ? $input['id'] : null;
         $db_data = [
-            'title' => $input['title'],
+            'title' => trim(strip_tags($input['title'])),
             'slug' => strtolower(url_title($input['title'])),
-            'content' => isset($input['content']) ? $input['content'] : $input['title'],
+            'content' => isset($input['content']) ? trim(strip_tags($input['content'])) : trim(strip_tags($input['title'])),
             'status' => 1
         ];
         if ($id && is_numeric($id)) {
@@ -540,18 +603,19 @@ class Api extends CI_Controller {
      * Delete an item in a collection.
      */
     public function remove() {
-        $collection = $this->input->get('collection');
-        $id = $this->input->get('id');
+        $this->_require_admin();
+
+        $collection = $this->input->get('collection', TRUE);
+        $id = $this->input->get('id', TRUE);
         if (!$collection || !$id) {
-            $this->_json(['status' => false]);
+            $this->_json(['status' => false], 400);
             return;
         }
 
         $status = false;
-        
+
         if (!is_numeric($id)) {
-            // Demo data removal (not in DB yet)
-            $this->_json(['status' => true]);
+            $this->_json(['status' => false], 400);
             return;
         }
 
@@ -580,6 +644,9 @@ class Api extends CI_Controller {
             case 'blogs':
                 $status = $this->blog_model->delete($id);
                 break;
+            default:
+                $this->_json(['status' => false], 400);
+                return;
         }
 
         $this->_json(['status' => $status]);
@@ -589,6 +656,8 @@ class Api extends CI_Controller {
      * Return live analytics metrics.
      */
     public function admin_stats() {
+        $this->_require_admin();
+
         $totalUsers = $this->user_model->count_all(['role_id' => 3]);
         $totalAstros = $this->astrologer_model->count_all();
         $subs = $this->user_subscription_model->get_where(['status' => 'active']);
@@ -597,7 +666,7 @@ class Api extends CI_Controller {
             $plan = $this->subscription_plan_model->get_by_id($sub['plan_id']);
             if ($plan) $totalRevenue += floatval($plan['price']);
         }
-        
+
         $this->_json([
             'totalUsers' => $totalUsers,
             'totalAstrologers' => $totalAstros,
@@ -607,35 +676,37 @@ class Api extends CI_Controller {
     }
 
     /**
-     * Authenticate or retrieve session credentials.
+     * Authenticate user credentials.
      */
     public function login() {
         $input = json_decode($this->input->raw_input_stream, true);
-        if (!$input) {
-            $this->_json(null);
+        if (!$input || empty($input['email']) || empty($input['password'])) {
+            $this->_json(null, 401);
             return;
         }
 
-        $email = $input['email'];
+        $email = strtolower(trim($input['email']));
+        $password = $input['password'];
+        $role = isset($input['role']) ? $input['role'] : 'user';
+        $expected_role_id = $this->_sanitize_role_id($role);
+
         $user = $this->user_model->get_where(['email' => $email]);
-        if (!empty($user)) {
-            $u = $this->_map_user($user[0]);
-            $this->_json($u);
+        if (empty($user)) {
+            $this->_json(null, 401);
             return;
         }
 
-        // Default admin demo login fallback
-        if ($email === 'admin@astroveda.in') {
-            $this->_json([
-                'id' => 'ADMIN',
-                'name' => 'Admin User',
-                'email' => $email,
-                'role' => 'admin',
-                'avatar' => 'A'
-            ]);
+        $user = $user[0];
+        if (!password_verify($password, $user['password'])) {
+            $this->_json(null, 401);
             return;
         }
 
-        $this->_json(null);
+        if ((int) $user['role_id'] !== $expected_role_id) {
+            $this->_json(null, 403);
+            return;
+        }
+
+        $this->_json($this->_map_user($user, TRUE));
     }
 }
