@@ -20,7 +20,7 @@ $slots = $CI->db->get_where('astrologer_availability', ['astrologer_id' => $astr
   <div class="card-body">
     <div class="card-title">Weekly Schedule Slots</div>
     <div class="table-responsive">
-      <table class="table">
+      <table class="data-table">
         <thead>
           <tr>
             <th>Day Name</th>
@@ -37,7 +37,7 @@ $slots = $CI->db->get_where('astrologer_availability', ['astrologer_id' => $astr
                 <td><?= date('h:i A', strtotime($s['start_time'])) ?></td>
                 <td><?= date('h:i A', strtotime($s['end_time'])) ?></td>
                 <td>
-                  <a href="<?= site_url('astrologer/delete-slot/'.$s['id']) ?>" class="btn btn-secondary btn-sm" onclick="return confirm('Remove this slot?')">Remove</a>
+                  <a href="#" class="btn btn-secondary btn-sm" onclick="deleteSlot('<?= $s['id'] ?>', '<?= ucfirst(html_escape($s['day_name'])) ?>'); return false;">Remove</a>
                 </td>
               </tr>
             <?php endforeach; ?>
@@ -61,7 +61,7 @@ $slots = $CI->db->get_where('astrologer_availability', ['astrologer_id' => $astr
       <div class="modal-title">Create Availability Slot</div>
       <button class="modal-close" onclick="document.getElementById('slotModal').classList.remove('open')">✕</button>
     </div>
-    <form method="POST" action="<?= site_url('astrologer/save-slot') ?>">
+    <form id="slotForm" class="ajax-form" method="POST" action="<?= site_url('astrologer/save-slot') ?>">
       <?= csrf_field() ?>
       <div class="form-group" style="margin-bottom:12px">
         <label class="form-label">Day of Week <span class="req">*</span></label>
@@ -91,3 +91,20 @@ $slots = $CI->db->get_where('astrologer_availability', ['astrologer_id' => $astr
     </form>
   </div>
 </div>
+
+<script>
+function deleteSlot(id, day) {
+  AppNotification.confirm({
+    title: 'Remove Availability Slot?',
+    text: `Are you sure you want to remove the slot for ${day}?`,
+    confirmButtonText: 'Yes, remove it!'
+  }, function() {
+    AppAjax.get('<?= site_url("astrologer/delete-slot") ?>/' + id, function(res) {
+      AppNotification.toast('Availability slot removed successfully', 'success');
+      setTimeout(function() {
+        location.reload();
+      }, 1000);
+    });
+  });
+}
+</script>

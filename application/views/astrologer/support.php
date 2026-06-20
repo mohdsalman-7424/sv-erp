@@ -20,7 +20,7 @@ $tickets = $CI->support_ticket_model->get_where(['user_id' => $current_user['id'
   <div class="card-body">
     <div class="card-title">Support History</div>
     <div class="table-responsive">
-      <table class="table">
+      <table class="data-table">
         <thead>
           <tr>
             <th>Ticket No.</th>
@@ -71,7 +71,7 @@ $tickets = $CI->support_ticket_model->get_where(['user_id' => $current_user['id'
       <div class="modal-title">Create Support Ticket</div>
       <button class="modal-close" onclick="document.getElementById('ticketModal').classList.remove('open')">✕</button>
     </div>
-    <form method="POST" action="<?= site_url('astrologer/save-ticket') ?>">
+    <form id="ticketForm" class="ajax-form" method="POST" action="<?= site_url('astrologer/save-ticket') ?>">
       <?= csrf_field() ?>
       <div class="form-group" style="margin-bottom:14px">
         <label class="form-label">Subject <span class="req">*</span></label>

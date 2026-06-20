@@ -15,7 +15,7 @@
         <h3 class="cinzel" style="color:var(--navy);font-size:16px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:8px">Upcoming Auspicious Muhurats (2026)</h3>
         
         <div class="table-responsive">
-          <table class="table">
+          <table class="data-table">
             <thead>
               <tr>
                 <th>Muhurat Category</th>

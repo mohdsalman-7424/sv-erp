@@ -23,7 +23,7 @@ $orders = $CI->db->get()->result_array();
   <div class="card-body">
     <div class="card-title">All Bookings</div>
     <div class="table-responsive">
-      <table class="table">
+      <table class="data-table">
         <thead>
           <tr>
             <th>Order ID</th>

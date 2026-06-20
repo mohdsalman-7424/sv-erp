@@ -55,7 +55,7 @@ foreach ($referrals as $ref) {
     <div class="card-body">
       <div class="card-title">My Referrals</div>
       <div class="table-responsive">
-        <table class="table">
+        <table class="data-table">
           <thead>
             <tr>
               <th>Friend Name</th>

@@ -21,7 +21,7 @@
         <div><span class="hero-stat-n">18Yr+</span><span class="hero-stat-l">Combined Exp</span></div>
       </div>
     </div>
-    <div class="hero-visual" style="display:flex;justify-content:center">
+        <div class="hero-visual" style="display:flex;justify-content:center">
       <div class="kundli-card" style="width:100%;max-width:400px">
         <div class="kundli-head"><h3>✦ Janam Kundli</h3><p>LAGNA CHART • NORTH INDIAN STYLE</p></div>
         <div class="kundli-chart">
@@ -36,8 +36,13 @@
             <text x="130" y="70" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="8">Su Me</text>
             <text x="60" y="132" text-anchor="middle" fill="rgba(200,147,26,0.8)" font-size="10" font-family="serif">वृष</text>
             <text x="200" y="132" text-anchor="middle" fill="rgba(200,147,26,0.8)" font-size="10" font-family="serif">मिथुन</text>
+            <text x="200" y="144" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="8">Ma</text>
             <text x="130" y="206" text-anchor="middle" fill="rgba(200,147,26,0.8)" font-size="10" font-family="serif">कर्क</text>
             <text x="130" y="218" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="8">Mo</text>
+            <text x="38" y="58" text-anchor="middle" fill="rgba(200,147,26,0.45)" font-size="8">धनु</text>
+            <text x="222" y="58" text-anchor="middle" fill="rgba(200,147,26,0.45)" font-size="8">मकर</text>
+            <text x="38" y="208" text-anchor="middle" fill="rgba(200,147,26,0.45)" font-size="8">तुला</text>
+            <text x="222" y="208" text-anchor="middle" fill="rgba(200,147,26,0.45)" font-size="8">सिंह</text>
             <text x="130" y="140" text-anchor="middle" fill="rgba(200,147,26,0.25)" font-size="34" font-family="serif">ॐ</text>
           </svg>
         </div>
@@ -48,7 +53,6 @@
           <div class="k-planet"><div class="k-dot" style="background:rgba(100,200,100,0.15);color:#90EE90">☿</div><div><div class="k-pname">Mercury</div><div class="k-ppos">Aries 3°18'</div></div></div>
         </div>
       </div>
-    </div>
   </div>
 </section>
 

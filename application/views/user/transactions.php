@@ -31,7 +31,7 @@ if (!empty($wallet)) {
   <div class="card-body">
     <div class="card-title">Transaction History</div>
     <div class="table-responsive">
-      <table class="table">
+      <table class="data-table">
         <thead>
           <tr>
             <th>Txn ID</th>

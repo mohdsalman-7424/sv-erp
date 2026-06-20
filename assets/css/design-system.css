@@ -635,3 +635,92 @@ body {
 .justify-between { justify-content: space-between; }
 .flex-wrap { flex-wrap: wrap; }
 .w-100 { width: 100%; }
+
+/* ---- KUNDALI CARD ---- */
+.kundli-card {
+  background: rgba(22,43,82,0.85);
+  border: 1px solid rgba(200,147,26,0.3);
+  border-radius: 18px;
+  padding: 26px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-cosmic);
+}
+.kundli-head { text-align: center; margin-bottom: 18px; }
+.kundli-head h3 {
+  font-family: 'Cinzel', serif;
+  color: var(--gold-bright);
+  font-size: 16px;
+  margin-bottom: 3px;
+}
+.kundli-head p { font-size: 10px; color: rgba(255,255,255,0.35); letter-spacing: 1px; }
+.kundli-chart {
+  background: rgba(11,28,58,0.6);
+  border: 1px solid rgba(200,147,26,0.15);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 14px;
+}
+.k-planets { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.k-planet {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(200,147,26,0.12);
+  border-radius: 7px;
+  padding: 6px 8px;
+  color: #fff;
+}
+.k-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.k-pname { font-size: 10px; color: rgba(255,255,255,0.55); }
+.k-ppos { font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 600; }
+
+/* ---- DASHA TIMELINE ---- */
+.dasha-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.dasha-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.dasha-bar-wrap {
+  width: 72px;
+  background: var(--cream-dark);
+  border-radius: 3px;
+  height: 4px;
+  flex-shrink: 0;
+}
+.dasha-bar { height: 4px; border-radius: 3px; background: var(--gold); }
+
+/* ---- LAYOUT GRIDS ---- */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+
+@media (max-width: 768px) {
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr !important; }
+}
+
+
+

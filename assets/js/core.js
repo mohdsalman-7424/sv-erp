@@ -288,3 +288,111 @@ function formatDate(date) {
 function randomId() {
   return 'SV' + Date.now().toString(36).toUpperCase();
 }
+
+// CSRF Cookie Helper & Syncer
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+function updateCSRFTokens() {
+  const token = getCookie('sv_csrf_cookie');
+  if (token) {
+    $('input[name="sv_csrf_token"]').val(token);
+  }
+}
+
+// Global AJAX Form Submission Interceptor using jQuery
+$(document).on('submit', 'form', function(e) {
+  const form = this;
+  const $form = $(form);
+  
+  // Exclude forms with data-no-ajax="true"
+  if ($form.attr('data-no-ajax') === 'true') {
+    return;
+  }
+  
+  // Intercept standard form submit
+  e.preventDefault();
+  
+  const action = $form.attr('action') || window.location.href;
+  const method = ($form.attr('method') || 'POST').toUpperCase();
+  const formData = new FormData(form);
+  
+  // Find submit button and apply loading state
+  const $submitBtn = $form.find('[type="submit"], button:not([type="button"])');
+  const originalBtnText = $submitBtn.length ? $submitBtn.html() : '';
+  if ($submitBtn.length) {
+    $submitBtn.prop('disabled', true);
+    $submitBtn.html('<span>⏳ Processing...</span>');
+  }
+  
+  $.ajax({
+    url: action,
+    type: method,
+    data: formData,
+    processData: false,
+    contentType: false,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    dataType: 'json',
+    success: function(data) {
+      if ($submitBtn.length) {
+        $submitBtn.prop('disabled', false);
+        $submitBtn.html(originalBtnText);
+      }
+      
+      // Always trigger CSRF update, since CI regenerates the token
+      setTimeout(updateCSRFTokens, 100);
+      
+      if (data.status || data.success) {
+        const msg = data.message || data.success || 'Action completed successfully!';
+        Toast.show(msg, 'success');
+        
+        // Close open modals
+        const $modalOverlay = $form.closest('.modal-overlay');
+        if ($modalOverlay.length) {
+          $modalOverlay.removeClass('open');
+        }
+        
+        // Reset form fields
+        form.reset();
+        
+        // Handle page redirects or reloads if configured
+        if (data.redirect) {
+          setTimeout(() => {
+            window.location.href = data.redirect;
+          }, 1000);
+        } else if (data.reload) {
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }
+        
+        // If there is a global or page-specific success callback
+        if (typeof window.onAjaxFormSuccess === 'function') {
+          window.onAjaxFormSuccess(form, data);
+        }
+      } else {
+        const errMsg = data.error || data.message || 'An error occurred.';
+        Toast.show(errMsg, 'error');
+      }
+    },
+    error: function(xhr, status, error) {
+      if ($submitBtn.length) {
+        $submitBtn.prop('disabled', false);
+        $submitBtn.html(originalBtnText);
+      }
+      setTimeout(updateCSRFTokens, 100);
+      
+      let errMsg = 'Network error, please try again.';
+      if (xhr.responseJSON) {
+        errMsg = xhr.responseJSON.error || xhr.responseJSON.message || errMsg;
+      }
+      Toast.show(errMsg, 'error');
+    }
+  });
+});

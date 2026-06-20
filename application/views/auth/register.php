@@ -14,13 +14,72 @@
 <nav id="top-nav">
   <a class="nav-brand" href="<?= site_url('/') ?>">
     <div class="nav-logo">ॐ</div>
-    <div><div class="nav-brand-name">Samriddhi-Ventures</div><div class="nav-brand-sub">Sacred ERP Platform</div></div>
+    <div>
+      <div class="nav-brand-name">Samriddhi-Ventures</div>
+      <div class="nav-brand-sub">Sacred ERP Platform</div>
+    </div>
   </a>
-  <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+  <ul class="nav-links">
+    <li><a href="<?= site_url('/') ?>">Home</a></li>
+    <li><a href="<?= site_url('tools/kundali-generator') ?>">Kundli</a></li>
+    <li><a href="<?= site_url('tools/daily-horoscope') ?>">Horoscope</a></li>
+    <li><a href="<?= site_url('astrologers') ?>">Astrologers</a></li>
+    <li><a href="<?= site_url('tools/panchang') ?>">Panchang</a></li>
+    <li><a href="<?= site_url('tools/kundali-matching') ?>">Kundli Milan</a></li>
+    <li><a href="<?= site_url('plans') ?>">Plans</a></li>
+    <li><a href="<?= site_url('tools/shop') ?>">Shop</a></li>
+    <li><a href="<?= site_url('about') ?>">About</a></li>
+  </ul>
+  <div class="nav-ctas">
     <button class="theme-toggle" data-action="toggle-theme"><span class="theme-icon">🌙</span></button>
-    <a href="<?= site_url('auth/login') ?>" class="btn-nav-outline">← Back to Login</a>
+    <?php if ($this->session->userdata('logged_in')): ?>
+      <?php 
+        $role_id = intval($this->session->userdata('role_id'));
+        $dashboard_url = site_url('user');
+        if ($role_id === 1) {
+            $dashboard_url = site_url('admin');
+        } elseif ($role_id === 2) {
+            $dashboard_url = site_url('astrologer');
+        }
+      ?>
+      <a href="<?= $dashboard_url ?>" class="btn-nav-solid">👤 Profile</a>
+    <?php else: ?>
+      <a href="<?= site_url('auth/login') ?>" class="btn-nav-outline">Login</a>
+      <a href="<?= site_url('auth/register') ?>" class="btn-nav-solid active">Register Free</a>
+    <?php endif; ?>
   </div>
+  <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
 </nav>
+
+<!-- MOBILE MENU -->
+<div class="mob-menu" id="mobMenu">
+  <a class="mob-link" href="<?= site_url('/') ?>">🏠 Home</a>
+  <a class="mob-link" href="<?= site_url('tools/kundali-generator') ?>">🔭 Kundli Generator</a>
+  <a class="mob-link" href="<?= site_url('tools/daily-horoscope') ?>">⭐ Daily Horoscope</a>
+  <a class="mob-link" href="<?= site_url('astrologers') ?>">🧘 Astrologers</a>
+  <a class="mob-link" href="<?= site_url('tools/panchang') ?>">📅 Panchang</a>
+  <a class="mob-link" href="<?= site_url('tools/kundali-matching') ?>">💑 Kundli Milan</a>
+  <a class="mob-link" href="<?= site_url('plans') ?>">💎 Plans</a>
+  <a class="mob-link" href="<?= site_url('tools/shop') ?>">🛍 Shop</a>
+  <a class="mob-link" href="<?= site_url('about') ?>">ℹ About</a>
+  <div class="mob-ctas">
+    <?php if ($this->session->userdata('logged_in')): ?>
+      <?php 
+        $role_id = intval($this->session->userdata('role_id'));
+        $dashboard_url = site_url('user');
+        if ($role_id === 1) {
+            $dashboard_url = site_url('admin');
+        } elseif ($role_id === 2) {
+            $dashboard_url = site_url('astrologer');
+        }
+      ?>
+      <a href="<?= $dashboard_url ?>" class="btn-nav-solid" style="flex:1;text-align:center;padding:10px">👤 Profile</a>
+    <?php else: ?>
+      <a href="<?= site_url('auth/login') ?>" class="btn-nav-outline" style="flex:1;text-align:center;padding:10px">Login</a>
+      <a href="<?= site_url('auth/register') ?>" class="btn-nav-solid" style="flex:1;text-align:center;padding:10px">Register</a>
+    <?php endif; ?>
+  </div>
+</div>
 
 <div class="auth-page">
 <div class="auth-split">
@@ -156,27 +215,52 @@
 </div>
 
 <div id="toast-container"></div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/jquery.validate.min.js"></script>
 <script src="<?= base_url('assets/js/store.js') ?>"></script>
 <script src="<?= base_url('assets/js/core.js') ?>"></script>
 <script>
 let regRole = 'user';
+
 function setRegRole(role, btn) {
   regRole = role;
   document.querySelectorAll('#regRoleTabs .role-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('regRole').value = role;
 }
+
 function setLang(lang) {
   document.getElementById('regLanguage').value = lang;
 }
+
+function showNotification(msg, type) {
+  if (typeof toastr !== 'undefined') {
+    toastr[type](msg);
+  } else if (typeof Toast !== 'undefined' && typeof Toast.show === 'function') {
+    Toast.show(msg, type);
+  } else {
+    alert(msg);
+  }
+}
+
 function nextStep(n) {
-  // Client-side simple validation for step transition
+  // Validate step 1 fields when moving to step 2
   if (n === 2) {
-    if (!document.getElementById('regName').value || !document.getElementById('regEmail').value || !document.getElementById('regPhone').value || !document.getElementById('regPass').value) {
-      Toast.show('Please fill all required fields in Step 1', 'error');
+    const $form = $('#regForm');
+    let step1Valid = true;
+    
+    // Simple custom validation checks for step 1
+    if (!$('#regName').val() || !$('#regEmail').val() || !$('#regPhone').val() || !$('#regPass').val()) {
+      showNotification('Please fill all required fields in Step 1', 'error');
+      return;
+    }
+    
+    if ($('#regPass').val().length < 8) {
+      showNotification('Password must be at least 8 characters long', 'error');
       return;
     }
   }
+  
   [1,2,3].forEach(i => document.getElementById('regStep'+i).style.display = 'none');
   document.getElementById('regStep'+n).style.display = 'block';
   ['step1dot','step2dot','step3dot'].forEach((id,i) => {
@@ -185,10 +269,51 @@ function nextStep(n) {
     el.style.color = (i+1) <= n ? 'white' : 'var(--text-muted)';
   });
 }
+
 function doRegister() {
-  if (!document.getElementById('termsCheck').checked) { Toast.show('Please accept terms to continue','error'); return; }
-  document.getElementById('regForm').submit();
+  if (!document.getElementById('termsCheck').checked) {
+    showNotification('Please accept terms to continue', 'error');
+    return;
+  }
+  
+  const $form = $('#regForm');
+  
+  // Trigger jQuery Validate
+  if ($.isFunction($.fn.validate) && !$form.valid()) {
+    return;
+  }
+  
+  const $btn = $('button[onclick="doRegister()"]');
+  const originalText = $btn.text();
+  $btn.prop('disabled', true).text('Creating Account...');
+  
+  $.ajax({
+    url: $form.attr('action'),
+    type: 'POST',
+    data: $form.serialize(),
+    dataType: 'json',
+    success: function(res) {
+      if (res.status) {
+        showNotification(res.message, 'success');
+        setTimeout(() => {
+          window.location.href = res.redirect;
+        }, 1500);
+      } else {
+        showNotification(res.error || 'Registration failed', 'error');
+        $btn.prop('disabled', false).text(originalText);
+      }
+    },
+    error: function(xhr) {
+      let errorMsg = 'An error occurred during registration. Please try again.';
+      if (xhr.responseJSON && xhr.responseJSON.error) {
+        errorMsg = xhr.responseJSON.error;
+      }
+      showNotification(errorMsg, 'error');
+      $btn.prop('disabled', false).text(originalText);
+    }
+  });
 }
+
 document.querySelectorAll('.filter-chip').forEach(c => {
   c.addEventListener('click', function() {
     this.closest('div').querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
@@ -196,15 +321,35 @@ document.querySelectorAll('.filter-chip').forEach(c => {
   });
 });
 
+$(document).ready(function() {
+  $('#regForm').validate({
+    rules: {
+      name: { required: true, minlength: 2 },
+      email: { required: true, email: true },
+      mobile: { required: true },
+      password: { required: true, minlength: 8 }
+    },
+    messages: {
+      name: { required: "Please enter your name" },
+      email: { required: "Please enter your email address", email: "Please enter a valid email address" },
+      mobile: { required: "Please enter your mobile number" },
+      password: { required: "Please enter a password", minlength: "Password must be at least 8 characters" }
+    },
+    errorPlacement: function(error, element) {
+      showNotification(error.text(), 'error');
+    }
+  });
+});
+
 <?php if ($this->session->flashdata('error')): ?>
 document.addEventListener('DOMContentLoaded', () => {
-  Toast.show('<?= html_escape($this->session->flashdata('error')) ?>', 'error');
+  showNotification('<?= html_escape($this->session->flashdata('error')) ?>', 'error');
 });
 <?php endif; ?>
 
 <?php if ($this->session->flashdata('success')): ?>
 document.addEventListener('DOMContentLoaded', () => {
-  Toast.show('<?= html_escape($this->session->flashdata('success')) ?>', 'success');
+  showNotification('<?= html_escape($this->session->flashdata('success')) ?>', 'success');
 });
 <?php endif; ?>
 </script>

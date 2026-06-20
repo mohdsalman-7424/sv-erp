@@ -20,7 +20,7 @@ $kundalis = $CI->db->get()->result_array();
   <div class="card-body">
     <div class="card-title">User Birth Charts</div>
     <div class="table-responsive">
-      <table class="table">
+      <table class="data-table">
         <thead>
           <tr>
             <th>Profile Name</th>

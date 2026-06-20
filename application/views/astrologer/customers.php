@@ -23,7 +23,7 @@ $customers = $CI->db->get()->result_array();
   <div class="card-body">
     <div class="card-title">Client Registry</div>
     <div class="table-responsive">
-      <table class="table">
+      <table class="data-table">
         <thead>
           <tr>
             <th>Name</th>

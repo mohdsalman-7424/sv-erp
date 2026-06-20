@@ -17,7 +17,7 @@ $a_data = !empty($address) ? $address[0] : [];
   </div>
 </div>
 
-<form method="POST" action="<?= site_url('user/save-profile') ?>">
+<form id="profileForm" class="ajax-form" method="POST" action="<?= site_url('user/save-profile') ?>" data-reset="false">
   <?= csrf_field() ?>
   <div class="grid-2" style="gap:20px;align-items:start">
     
@@ -123,3 +123,16 @@ $a_data = !empty($address) ? $address[0] : [];
 
   </div>
 </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  if ($.isFunction($.fn.validate)) {
+    $('#profileForm').validate({
+      rules: {
+        name: { required: true, minlength: 2 },
+        mobile: { required: true, minlength: 10, maxlength: 15 }
+      }
+    });
+  }
+});
+</script>

@@ -23,7 +23,7 @@ $video_consults = $CI->db->get()->result_array();
   <div class="card-body">
     <div class="card-title">Virtual Meeting Schedule</div>
     <div class="table-responsive">
-      <table class="table">
+      <table class="data-table">
         <thead>
           <tr>
             <th>Session ID</th>

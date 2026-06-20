@@ -41,7 +41,7 @@ $plans = $CI->astrologer_plan_model->get_where(['astrologer_id' => $astro_id]);
           </p>
 
           <div style="display:flex;gap:10px;margin-top:auto">
-            <a href="<?= site_url('astrologer/delete-plan/'.$p['id']) ?>" class="btn btn-secondary btn-sm" style="flex:1;text-align:center;" onclick="return confirm('Delete this service plan?')">Delete</a>
+            <a href="#" class="btn btn-secondary btn-sm" style="flex:1;text-align:center;" onclick="deleteServicePlan('<?= $p['id'] ?>', '<?= html_escape($p['title']) ?>'); return false;">Delete</a>
           </div>
         </div>
       </div>
@@ -60,7 +60,7 @@ $plans = $CI->astrologer_plan_model->get_where(['astrologer_id' => $astro_id]);
       <div class="modal-title">Create Service Plan</div>
       <button class="modal-close" onclick="document.getElementById('planModal').classList.remove('open')">✕</button>
     </div>
-    <form method="POST" action="<?= site_url('astrologer/save-plan') ?>">
+    <form id="planForm" class="ajax-form" method="POST" action="<?= site_url('astrologer/save-plan') ?>">
       <?= csrf_field() ?>
       <div class="form-group" style="margin-bottom:12px">
         <label class="form-label">Plan Title <span class="req">*</span></label>
@@ -91,3 +91,20 @@ $plans = $CI->astrologer_plan_model->get_where(['astrologer_id' => $astro_id]);
     </form>
   </div>
 </div>
+
+<script>
+function deleteServicePlan(id, title) {
+  AppNotification.confirm({
+    title: 'Remove Service Plan?',
+    text: `Are you sure you want to delete service plan "${title}"?`,
+    confirmButtonText: 'Yes, delete it!'
+  }, function() {
+    AppAjax.get('<?= site_url("astrologer/delete-plan") ?>/' + id, function(res) {
+      AppNotification.toast('Service plan removed successfully', 'success');
+      setTimeout(function() {
+        location.reload();
+      }, 1000);
+    });
+  });
+}
+</script>

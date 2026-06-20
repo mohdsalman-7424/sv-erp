@@ -9,6 +9,10 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <!-- Toastr -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<!-- jQuery Validation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/jquery.validate.min.js"></script>
 <!-- Flatpickr -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <!-- SumoSelect -->
@@ -16,6 +20,9 @@
 <!-- App JS -->
 <script src="<?= base_url('assets/js/store.js') ?>"></script>
 <script src="<?= base_url('assets/js/core.js') ?>"></script>
+<script src="<?= base_url('assets/js/notification.js') ?>"></script>
+<script src="<?= base_url('assets/js/ajax.js') ?>"></script>
+<script src="<?= base_url('assets/js/datatable.js') ?>"></script>
 <script>
 // Toastr global defaults
 toastr.options = {

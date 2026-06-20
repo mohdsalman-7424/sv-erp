@@ -27,7 +27,7 @@ $matches = $CI->db->get()->result_array();
   <div class="card-body">
     <div class="card-title">Matchmaking History</div>
     <div class="table-responsive">
-      <table class="table">
+      <table class="data-table">
         <thead>
           <tr>
             <th>ID</th>
@@ -78,7 +78,7 @@ $matches = $CI->db->get()->result_array();
       <div class="modal-title">Gun Milan Compatibility Check</div>
       <button class="modal-close" onclick="document.getElementById('matchModal').classList.remove('open')">✕</button>
     </div>
-    <form method="POST" action="<?= site_url('user/save-match') ?>">
+    <form id="matchForm" class="ajax-form" method="POST" action="<?= site_url('user/save-match') ?>">
       <?= csrf_field() ?>
       <div class="form-group" style="margin-bottom:14px">
         <label class="form-label">Select Groom's Chart (Male) <span class="req">*</span></label>

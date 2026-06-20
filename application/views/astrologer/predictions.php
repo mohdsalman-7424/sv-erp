@@ -40,7 +40,7 @@ $predictions = $CI->db->get()->result_array();
                 <strong>Your Answer:</strong> <?= html_escape($p['prediction']) ?>
               </div>
             <?php else: ?>
-              <form method="POST" action="<?= site_url('astrologer/save-prediction/'.$p['id']) ?>">
+              <form class="ajax-form prediction-reply-form" method="POST" action="<?= site_url('astrologer/save-prediction/'.$p['id']) ?>">
                 <?= csrf_field() ?>
                 <div class="form-group" style="margin-bottom:10px">
                   <label class="form-label" style="font-size:11px">Write your prediction / reply:</label>
@@ -59,3 +59,18 @@ $predictions = $CI->db->get()->result_array();
     <?php endif; ?>
   </div>
 </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  if ($.isFunction($.fn.validate)) {
+    $('.prediction-reply-form').each(function() {
+      $(this).validate({
+        rules: {
+          prediction: { required: true, minlength: 10 }
+        }
+      });
+    });
+  }
+});
+</script>

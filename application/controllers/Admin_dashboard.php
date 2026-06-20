@@ -88,7 +88,12 @@ class Admin_dashboard extends CI_Controller {
         $this->form_validation->set_rules('rashi', 'Rashi', 'trim|max_length[50]');
 
         if ($this->form_validation->run() === FALSE) {
-            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            $error = strip_tags(validation_errors(' ', ' '));
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'error' => $error]));
+                return;
+            }
+            $this->session->set_flashdata('error', $error);
             redirect('admin_dashboard/users');
         }
 
@@ -107,16 +112,19 @@ class Admin_dashboard extends CI_Controller {
             'role_id' => 3
         ];
 
+        $msg = '';
         if ($id && is_numeric($id)) {
             $this->user_model->update($id, $db_data);
             $user_id = $id;
-            $this->session->set_flashdata('success', 'User updated successfully.');
+            $msg = 'User updated successfully.';
+            $this->session->set_flashdata('success', $msg);
         } else {
             $temp_password = generate_temp_password();
             $db_data['password'] = password_hash($temp_password, PASSWORD_BCRYPT);
             $db_data['status'] = 1;
             $user_id = $this->user_model->insert($db_data);
-            $this->session->set_flashdata('success', 'User created. Temporary password: ' . $temp_password);
+            $msg = 'User created. Temporary password: ' . $temp_password;
+            $this->session->set_flashdata('success', $msg);
         }
 
         // Save address
@@ -139,6 +147,14 @@ class Admin_dashboard extends CI_Controller {
         $wallet = $this->wallet_model->get_where(['user_id' => $user_id]);
         if (empty($wallet)) {
             $this->wallet_model->insert(['user_id' => $user_id, 'balance' => 0.00]);
+        }
+
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true, 
+                'message' => $msg
+            ]));
+            return;
         }
 
         redirect('admin_dashboard/users');
@@ -166,7 +182,12 @@ class Admin_dashboard extends CI_Controller {
         $this->form_validation->set_rules('expertise', 'Expertise', 'trim|max_length[255]');
 
         if ($this->form_validation->run() === FALSE) {
-            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            $error = strip_tags(validation_errors(' ', ' '));
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'error' => $error]));
+                return;
+            }
+            $this->session->set_flashdata('error', $error);
             redirect('admin_dashboard/astrologers');
         }
 
@@ -187,8 +208,11 @@ class Admin_dashboard extends CI_Controller {
             if ($astro) $user_id = $astro['user_id'];
         }
 
+        $msg = '';
         if ($user_id) {
             $this->user_model->update($user_id, ['name' => $name]);
+            $msg = 'Astrologer details updated.';
+            $this->session->set_flashdata('success', $msg);
         } else {
             $temp_password = generate_temp_password();
             $user_id = $this->user_model->insert([
@@ -198,7 +222,8 @@ class Admin_dashboard extends CI_Controller {
                 'role_id' => 2,
                 'status' => 1
             ]);
-            $this->session->set_flashdata('success', 'Astrologer created. Temporary password: ' . $temp_password);
+            $msg = 'Astrologer created. Temporary password: ' . $temp_password;
+            $this->session->set_flashdata('success', $msg);
         }
 
         $astro_data = [
@@ -224,6 +249,14 @@ class Admin_dashboard extends CI_Controller {
             $this->user_address_model->update($address[0]['id'], ['city' => $city]);
         } else {
             $this->user_address_model->insert(['user_id' => $user_id, 'city' => $city]);
+        }
+
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true, 
+                'message' => $msg
+            ]));
+            return;
         }
 
         redirect('admin_dashboard/astrologers');
@@ -254,7 +287,12 @@ class Admin_dashboard extends CI_Controller {
         $this->form_validation->set_rules('features', 'Features', 'trim|max_length[1000]');
 
         if ($this->form_validation->run() === FALSE) {
-            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            $error = strip_tags(validation_errors(' ', ' '));
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'error' => $error]));
+                return;
+            }
+            $this->session->set_flashdata('error', $error);
             redirect('admin_dashboard/subscription_plans');
         }
 
@@ -273,10 +311,23 @@ class Admin_dashboard extends CI_Controller {
             'status' => 1
         ];
 
+        $msg = '';
         if ($id && is_numeric($id)) {
             $this->subscription_plan_model->update($id, $db_data);
+            $msg = 'Subscription plan updated successfully.';
+            $this->session->set_flashdata('success', $msg);
         } else {
             $this->subscription_plan_model->insert($db_data);
+            $msg = 'Subscription plan created successfully.';
+            $this->session->set_flashdata('success', $msg);
+        }
+
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg
+            ]));
+            return;
         }
 
         redirect('admin_dashboard/subscription_plans');

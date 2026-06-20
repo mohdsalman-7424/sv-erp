@@ -13,7 +13,7 @@
     <div class="card" style="border:1px solid var(--border);margin-bottom:34px">
       <div class="card-body">
         <form id="matchForm" onsubmit="calculateMatch(); return false;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" class="grid-2">
+          <div class="grid-2" style="gap:24px">
             <!-- Boy Details -->
             <div style="background:var(--gold-pale);border:1px solid var(--border);padding:18px;border-radius:12px">
               <h3 class="cinzel" style="color:var(--navy);font-size:15px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:8px">👦 Boy's Birth Details</h3>
@@ -80,7 +80,7 @@
           <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:10px">Auspicious Compatibility Match ✓</div>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;margin-bottom:20px" class="grid-2">
+        <div class="grid-3" style="gap:14px;margin-bottom:20px">
           <div style="background:var(--gold-pale);border:1px solid var(--border);padding:14px;border-radius:10px;text-align:center">
             <strong style="color:var(--navy);font-size:12px">Ashtakoot Guna Match</strong>
             <div style="font-size:18px;font-weight:700;color:var(--gold);margin-top:4px">28.5 / 36</div>

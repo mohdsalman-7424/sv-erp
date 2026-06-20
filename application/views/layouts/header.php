@@ -13,6 +13,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&family=Mulish:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <!-- Toastr -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<!-- SweetAlert2 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <!-- Flatpickr DateTimePicker -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <!-- SumoSelect -->
@@ -46,8 +48,21 @@
   </ul>
   <div class="nav-ctas">
     <button class="theme-toggle" data-action="toggle-theme"><span class="theme-icon">🌙</span></button>
-    <a href="<?= site_url('auth/login') ?>" class="btn-nav-outline">Login</a>
-    <a href="<?= site_url('auth/register') ?>" class="btn-nav-solid">Register Free</a>
+    <?php if ($this->session->userdata('logged_in')): ?>
+      <?php 
+        $role_id = intval($this->session->userdata('role_id'));
+        $dashboard_url = site_url('user');
+        if ($role_id === 1) {
+            $dashboard_url = site_url('admin');
+        } elseif ($role_id === 2) {
+            $dashboard_url = site_url('astrologer');
+        }
+      ?>
+      <a href="<?= $dashboard_url ?>" class="btn-nav-solid">👤 Profile</a>
+    <?php else: ?>
+      <a href="<?= site_url('auth/login') ?>" class="btn-nav-outline">Login</a>
+      <a href="<?= site_url('auth/register') ?>" class="btn-nav-solid">Register Free</a>
+    <?php endif; ?>
   </div>
   <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
 </nav>
@@ -63,8 +78,21 @@
   <a class="mob-link" href="<?= site_url('tools/shop') ?>">🛍 Shop</a>
   <a class="mob-link" href="<?= site_url('about') ?>">ℹ About</a>
   <div class="mob-ctas">
-    <a href="<?= site_url('auth/login') ?>" class="btn-nav-outline" style="flex:1;text-align:center;padding:10px">Login</a>
-    <a href="<?= site_url('auth/register') ?>" class="btn-nav-solid" style="flex:1;text-align:center;padding:10px">Register</a>
+    <?php if ($this->session->userdata('logged_in')): ?>
+      <?php 
+        $role_id = intval($this->session->userdata('role_id'));
+        $dashboard_url = site_url('user');
+        if ($role_id === 1) {
+            $dashboard_url = site_url('admin');
+        } elseif ($role_id === 2) {
+            $dashboard_url = site_url('astrologer');
+        }
+      ?>
+      <a href="<?= $dashboard_url ?>" class="btn-nav-solid" style="flex:1;text-align:center;padding:10px">👤 Profile</a>
+    <?php else: ?>
+      <a href="<?= site_url('auth/login') ?>" class="btn-nav-outline" style="flex:1;text-align:center;padding:10px">Login</a>
+      <a href="<?= site_url('auth/register') ?>" class="btn-nav-solid" style="flex:1;text-align:center;padding:10px">Register</a>
+    <?php endif; ?>
   </div>
 </div>
 

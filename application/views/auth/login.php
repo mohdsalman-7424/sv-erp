@@ -15,13 +15,72 @@
 <nav id="top-nav">
   <a class="nav-brand" href="<?= site_url('/') ?>">
     <div class="nav-logo">ॐ</div>
-    <div><div class="nav-brand-name">Samriddhi-Ventures</div><div class="nav-brand-sub">Sacred ERP Platform</div></div>
+    <div>
+      <div class="nav-brand-name">Samriddhi-Ventures</div>
+      <div class="nav-brand-sub">Sacred ERP Platform</div>
+    </div>
   </a>
-  <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+  <ul class="nav-links">
+    <li><a href="<?= site_url('/') ?>">Home</a></li>
+    <li><a href="<?= site_url('tools/kundali-generator') ?>">Kundli</a></li>
+    <li><a href="<?= site_url('tools/daily-horoscope') ?>">Horoscope</a></li>
+    <li><a href="<?= site_url('astrologers') ?>">Astrologers</a></li>
+    <li><a href="<?= site_url('tools/panchang') ?>">Panchang</a></li>
+    <li><a href="<?= site_url('tools/kundali-matching') ?>">Kundli Milan</a></li>
+    <li><a href="<?= site_url('plans') ?>">Plans</a></li>
+    <li><a href="<?= site_url('tools/shop') ?>">Shop</a></li>
+    <li><a href="<?= site_url('about') ?>">About</a></li>
+  </ul>
+  <div class="nav-ctas">
     <button class="theme-toggle" data-action="toggle-theme"><span class="theme-icon">🌙</span></button>
-    <a href="<?= site_url('/') ?>" class="btn-nav-outline">← Back to Home</a>
+    <?php if ($this->session->userdata('logged_in')): ?>
+      <?php 
+        $role_id = intval($this->session->userdata('role_id'));
+        $dashboard_url = site_url('user');
+        if ($role_id === 1) {
+            $dashboard_url = site_url('admin');
+        } elseif ($role_id === 2) {
+            $dashboard_url = site_url('astrologer');
+        }
+      ?>
+      <a href="<?= $dashboard_url ?>" class="btn-nav-solid">👤 Profile</a>
+    <?php else: ?>
+      <a href="<?= site_url('auth/login') ?>" class="btn-nav-outline active">Login</a>
+      <a href="<?= site_url('auth/register') ?>" class="btn-nav-solid">Register Free</a>
+    <?php endif; ?>
   </div>
+  <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
 </nav>
+
+<!-- MOBILE MENU -->
+<div class="mob-menu" id="mobMenu">
+  <a class="mob-link" href="<?= site_url('/') ?>">🏠 Home</a>
+  <a class="mob-link" href="<?= site_url('tools/kundali-generator') ?>">🔭 Kundli Generator</a>
+  <a class="mob-link" href="<?= site_url('tools/daily-horoscope') ?>">⭐ Daily Horoscope</a>
+  <a class="mob-link" href="<?= site_url('astrologers') ?>">🧘 Astrologers</a>
+  <a class="mob-link" href="<?= site_url('tools/panchang') ?>">📅 Panchang</a>
+  <a class="mob-link" href="<?= site_url('tools/kundali-matching') ?>">💑 Kundli Milan</a>
+  <a class="mob-link" href="<?= site_url('plans') ?>">💎 Plans</a>
+  <a class="mob-link" href="<?= site_url('tools/shop') ?>">🛍 Shop</a>
+  <a class="mob-link" href="<?= site_url('about') ?>">ℹ About</a>
+  <div class="mob-ctas">
+    <?php if ($this->session->userdata('logged_in')): ?>
+      <?php 
+        $role_id = intval($this->session->userdata('role_id'));
+        $dashboard_url = site_url('user');
+        if ($role_id === 1) {
+            $dashboard_url = site_url('admin');
+        } elseif ($role_id === 2) {
+            $dashboard_url = site_url('astrologer');
+        }
+      ?>
+      <a href="<?= $dashboard_url ?>" class="btn-nav-solid" style="flex:1;text-align:center;padding:10px">👤 Profile</a>
+    <?php else: ?>
+      <a href="<?= site_url('auth/login') ?>" class="btn-nav-outline" style="flex:1;text-align:center;padding:10px">Login</a>
+      <a href="<?= site_url('auth/register') ?>" class="btn-nav-solid" style="flex:1;text-align:center;padding:10px">Register</a>
+    <?php endif; ?>
+  </div>
+</div>
 
 <div class="auth-page">
 <div class="auth-split">
@@ -69,7 +128,7 @@
 
       <!-- Email Tab -->
       <div class="tab-panel active" id="tab-email">
-        <form method="POST" action="<?= site_url('auth/do-login') ?>">
+        <form id="loginForm" method="POST" action="<?= site_url('auth/do-login') ?>">
           <?= csrf_field() ?>
           <input type="hidden" name="role" id="loginRole" value="user">
           <div class="form-group" style="margin-bottom:14px">
@@ -125,6 +184,8 @@
 </div>
 
 <div id="toast-container"></div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/jquery.validate.min.js"></script>
 <script src="<?= base_url('assets/js/store.js') ?>"></script>
 <script src="<?= base_url('assets/js/core.js') ?>"></script>
 <script>
@@ -148,19 +209,79 @@ function switchTab(tab, btn) {
 }
 
 function doSocialLogin(provider) {
-  Toast.show('Social login demo — redirecting...', 'info');
+  showNotification('Social login demo — redirecting...', 'info');
   setTimeout(() => window.location.href = '<?= site_url('user') ?>', 1200);
 }
 
+function showNotification(msg, type) {
+  if (typeof toastr !== 'undefined') {
+    toastr[type](msg);
+  } else if (typeof Toast !== 'undefined' && typeof Toast.show === 'function') {
+    Toast.show(msg, type);
+  } else {
+    alert(msg);
+  }
+}
+
+$(document).ready(function() {
+  $('#loginForm').validate({
+    rules: {
+      email: { required: true },
+      password: { required: true, minlength: 8 }
+    },
+    messages: {
+      email: { required: "Please enter your email or mobile" },
+      password: { required: "Please enter your password", minlength: "Password must be at least 8 characters" }
+    },
+    errorPlacement: function(error, element) {
+      showNotification(error.text(), 'error');
+    },
+    submitHandler: function(form) {
+      const $form = $(form);
+      const $btn = $form.find('button[type="submit"]');
+      const originalText = $btn.text();
+      
+      $btn.prop('disabled', true).text('Signing In...');
+      
+      $.ajax({
+        url: $form.attr('action'),
+        type: 'POST',
+        data: $form.serialize(),
+        dataType: 'json',
+        success: function(res) {
+          if (res.status) {
+            showNotification(res.message, 'success');
+            setTimeout(() => {
+              window.location.href = res.redirect;
+            }, 1000);
+          } else {
+            showNotification(res.error || 'Login failed', 'error');
+            $btn.prop('disabled', false).text(originalText);
+          }
+        },
+        error: function(xhr) {
+          let errorMsg = 'An error occurred. Please try again.';
+          if (xhr.responseJSON && xhr.responseJSON.error) {
+            errorMsg = xhr.responseJSON.error;
+          }
+          showNotification(errorMsg, 'error');
+          $btn.prop('disabled', false).text(originalText);
+        }
+      });
+      return false;
+    }
+  });
+});
+
 <?php if ($this->session->flashdata('error')): ?>
 document.addEventListener('DOMContentLoaded', () => {
-  Toast.show('<?= html_escape($this->session->flashdata('error')) ?>', 'error');
+  showNotification('<?= html_escape($this->session->flashdata('error')) ?>', 'error');
 });
 <?php endif; ?>
 
 <?php if ($this->session->flashdata('success')): ?>
 document.addEventListener('DOMContentLoaded', () => {
-  Toast.show('<?= html_escape($this->session->flashdata('success')) ?>', 'success');
+  showNotification('<?= html_escape($this->session->flashdata('success')) ?>', 'success');
 });
 <?php endif; ?>
 </script>

@@ -17,7 +17,7 @@ $invoices = $CI->invoice_model->get_where(['user_id' => $current_user['id']]);
   <div class="card-body">
     <div class="card-title">Billing History</div>
     <div class="table-responsive">
-      <table class="table">
+      <table class="data-table">
         <thead>
           <tr>
             <th>Invoice No.</th>

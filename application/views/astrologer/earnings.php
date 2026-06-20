@@ -50,7 +50,7 @@ $total_earned = count($earnings) * 350.00;
   <div class="card-body">
     <div class="card-title">Completed Consultations Ledger</div>
     <div class="table-responsive">
-      <table class="table">
+      <table class="data-table">
         <thead>
           <tr>
             <th>Session ID</th>

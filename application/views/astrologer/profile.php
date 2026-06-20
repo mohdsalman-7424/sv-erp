@@ -11,7 +11,7 @@ $astro = $current_astro;
   </div>
 </div>
 
-<form method="POST" action="<?= site_url('astrologer/save-profile') ?>">
+<form id="profileForm" class="ajax-form" method="POST" action="<?= site_url('astrologer/save-profile') ?>" data-reset="false">
   <?= csrf_field() ?>
   <div class="grid-2" style="gap:20px;align-items:start">
 
@@ -73,3 +73,18 @@ $astro = $current_astro;
 
   </div>
 </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  if ($.isFunction($.fn.validate)) {
+    $('#profileForm').validate({
+      rules: {
+        name: { required: true, minlength: 2 },
+        experience_years: { required: true, digits: true, min: 0 },
+        expertise: { required: true },
+        languages: { required: true }
+      }
+    });
+  }
+});
+</script>

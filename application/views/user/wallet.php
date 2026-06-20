@@ -35,7 +35,7 @@ if (!empty($wallet)) {
         <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px">Use for chats, calls, or matching reports</div>
       </div>
 
-      <form method="POST" action="<?= site_url('user/recharge-wallet') ?>">
+      <form id="rechargeForm" class="ajax-form" method="POST" action="<?= site_url('user/recharge-wallet') ?>">
         <?= csrf_field() ?>
         <div class="form-group" style="margin-bottom:14px">
           <label class="form-label">Select Amount (₹)</label>

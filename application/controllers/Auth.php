@@ -56,7 +56,12 @@ class Auth extends CI_Controller {
         $this->form_validation->set_rules('role', 'Role', 'required|in_list[user,astrologer,admin]');
 
         if ($this->form_validation->run() === FALSE) {
-            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            $error = strip_tags(validation_errors(' ', ' '));
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'error' => $error]));
+                return;
+            }
+            $this->session->set_flashdata('error', $error);
             redirect('auth/login');
         }
 
@@ -77,7 +82,6 @@ class Auth extends CI_Controller {
         if (empty($user)) {
             $user = $this->user_model->get_where(['mobile' => $email]);
         }
-		
         if (!empty($user)) {
             $user = $user[0];
             if (password_verify($password, $user['password'])) {
@@ -91,23 +95,37 @@ class Auth extends CI_Controller {
                         'logged_in' => TRUE
                     ]);
 
+                    $redirect = 'user';
                     if ($user['role_id'] == 1) {
-                        redirect('admin');
+                        $redirect = 'admin';
                     } elseif ($user['role_id'] == 2) {
-                        redirect('astrologer');
-                    } else {
-                        redirect('user');
+                        $redirect = 'astrologer';
                     }
+
+                    if ($this->input->is_ajax_request()) {
+                        $this->output->set_content_type('application/json')->set_output(json_encode([
+                            'status' => true, 
+                            'message' => 'Login successful! Redirecting...', 
+                            'redirect' => site_url($redirect)
+                        ]));
+                        return;
+                    }
+                    redirect($redirect);
                 } else {
-                    $this->session->set_flashdata('error', 'Invalid role selection for this user.');
+                    $error = 'Invalid role selection for this user.';
                 }
             } else {
-                $this->session->set_flashdata('error', 'Invalid password.');
+                $error = 'Invalid password.';
             }
         } else {
-            $this->session->set_flashdata('error', 'User not found.');
+            $error = 'User not found.';
         }
 
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'error' => $error]));
+            return;
+        }
+        $this->session->set_flashdata('error', $error);
         redirect('auth/login');
     }
 
@@ -124,7 +142,12 @@ class Auth extends CI_Controller {
         $this->form_validation->set_rules('language', 'Language', 'trim|max_length[100]');
 
         if ($this->form_validation->run() === FALSE) {
-            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            $error = strip_tags(validation_errors(' ', ' '));
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'error' => $error]));
+                return;
+            }
+            $this->session->set_flashdata('error', $error);
             redirect('auth/register');
         }
 
@@ -139,7 +162,7 @@ class Auth extends CI_Controller {
         $birth_place = trim(strip_tags($this->input->post('birth_place', TRUE)));
         $rashi = trim(strip_tags($this->input->post('rashi', TRUE)));
         $language = trim(strip_tags($this->input->post('language', TRUE)));
-
+		
         $hashed_password = password_hash($password, PASSWORD_BCRYPT);
         $role_id = ($role === 'astrologer') ? 2 : 3;
 
@@ -184,10 +207,24 @@ class Auth extends CI_Controller {
                 'balance' => 100.00
             ]);
 
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode([
+                    'status' => true, 
+                    'message' => 'Account created successfully! Please Sign In.', 
+                    'redirect' => site_url('auth/login')
+                ]));
+                return;
+            }
+
             $this->session->set_flashdata('success', 'Account created successfully! Please Sign In.');
             redirect('auth/login');
         } else {
-            $this->session->set_flashdata('error', 'Registration failed. Please try again.');
+            $error = 'Registration failed. Please try again.';
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'error' => $error]));
+                return;
+            }
+            $this->session->set_flashdata('error', $error);
             redirect('auth/register');
         }
     }
@@ -196,7 +233,12 @@ class Auth extends CI_Controller {
         $this->form_validation->set_rules('email', 'Email', 'required|trim|valid_email|max_length[255]');
 
         if ($this->form_validation->run() === FALSE) {
-            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            $error = strip_tags(validation_errors(' ', ' '));
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'error' => $error]));
+                return;
+            }
+            $this->session->set_flashdata('error', $error);
             redirect('auth/forgot-password');
         }
 
@@ -204,9 +246,19 @@ class Auth extends CI_Controller {
         $user = $this->user_model->get_where(['email' => $email]);
 
         if (!empty($user)) {
-            $this->session->set_flashdata('success', 'Password recovery link has been sent to your email.');
+            $msg = 'Password recovery link has been sent to your email.';
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(['status' => true, 'message' => $msg]));
+                return;
+            }
+            $this->session->set_flashdata('success', $msg);
         } else {
-            $this->session->set_flashdata('error', 'Email address not found.');
+            $error = 'Email address not found.';
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'error' => $error]));
+                return;
+            }
+            $this->session->set_flashdata('error', $error);
         }
         redirect('auth/forgot-password');
     }

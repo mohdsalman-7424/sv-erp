@@ -18,7 +18,16 @@ class Api extends CI_Controller {
             'product_model',
             'wallet_transaction_model',
             'notification_model',
-            'blog_model'
+            'blog_model',
+            'invoice_model',
+            'payment_model',
+            'coupon_model',
+            'support_ticket_model',
+            'referral_model',
+            'setting_model',
+            'seo_setting_model',
+            'review_model',
+            'ticket_reply_model'
         ]);
         $this->load->helper('url');
         $this->load->library('session');
@@ -275,6 +284,114 @@ class Api extends CI_Controller {
                     $result[] = $this->_map_blog($b);
                 }
                 break;
+            case 'invoices':
+                $invoices = $this->invoice_model->get_all();
+                foreach ($invoices as $i) {
+                    $u = $this->user_model->get_by_id($i['user_id']);
+                    $result[] = [
+                        'id' => $i['id'],
+                        'invoice_no' => $i['invoice_no'],
+                        'user_name' => $u ? $u['name'] : 'Unknown User',
+                        'amount' => floatval($i['amount']),
+                        'gst' => floatval($i['gst']),
+                        'total' => floatval($i['total']),
+                        'payment_status' => $i['payment_status'],
+                        'created_at' => date('Y-m-d', strtotime($i['created_at']))
+                    ];
+                }
+                break;
+            case 'payments':
+                $payments = $this->payment_model->get_all();
+                foreach ($payments as $p) {
+                    $u = $this->user_model->get_by_id($p['user_id']);
+                    $result[] = [
+                        'id' => $p['id'],
+                        'payment_id' => 'PAY-' . $p['id'],
+                        'user_name' => $u ? $u['name'] : 'Unknown User',
+                        'amount' => floatval($p['amount']),
+                        'payment_mode' => $p['gateway'],
+                        'status' => $p['status'],
+                        'created_at' => date('Y-m-d', strtotime($p['created_at']))
+                    ];
+                }
+                break;
+            case 'coupons':
+                $coupons = $this->coupon_model->get_all();
+                foreach ($coupons as $c) {
+                    $result[] = [
+                        'id' => $c['id'],
+                        'code' => $c['code'],
+                        'discount_type' => $c['discount_type'],
+                        'value' => floatval($c['discount_value']),
+                        'expiry' => $c['end_date'],
+                        'status' => intval($c['status'])
+                    ];
+                }
+                break;
+            case 'tickets':
+                $tickets = $this->support_ticket_model->get_all();
+                foreach ($tickets as $t) {
+                    $u = $this->user_model->get_by_id($t['user_id']);
+                    $result[] = [
+                        'id' => $t['id'],
+                        'ticket_no' => $t['ticket_no'],
+                        'user_name' => $u ? $u['name'] : 'Unknown User',
+                        'subject' => $t['subject'],
+                        'message' => $t['message'],
+                        'status' => $t['status'],
+                        'created_at' => date('Y-m-d', strtotime($t['created_at']))
+                    ];
+                }
+                break;
+            case 'referrals':
+                $referrals = $this->referral_model->get_all();
+                foreach ($referrals as $r) {
+                    $u1 = $this->user_model->get_by_id($r['referrer_id']);
+                    $u2 = $this->user_model->get_by_id($r['referred_user_id']);
+                    $result[] = [
+                        'id' => $r['id'],
+                        'referrer' => $u1 ? $u1['name'] : 'System',
+                        'referred' => $u2 ? $u2['name'] : 'User',
+                        'reward' => floatval($r['reward_amount']),
+                        'status' => $r['status'],
+                        'created_at' => date('Y-m-d', strtotime($r['created_at']))
+                    ];
+                }
+                break;
+            case 'settings':
+                $settings = $this->setting_model->get_all();
+                foreach ($settings as $s) {
+                    $result[] = [
+                        'id' => $s['id'],
+                        'key' => $s['setting_key'],
+                        'value' => $s['setting_value']
+                    ];
+                }
+                break;
+            case 'seo':
+                $seo = $this->seo_setting_model->get_all();
+                foreach ($seo as $s) {
+                    $result[] = [
+                        'id' => $s['id'],
+                        'page' => $s['page_name'],
+                        'title' => $s['meta_title'],
+                        'desc' => $s['meta_description']
+                    ];
+                }
+                break;
+            case 'testimonials':
+                $reviews = $this->review_model->get_all();
+                foreach ($reviews as $r) {
+                    $u = $this->user_model->get_by_id($r['user_id']);
+                    $result[] = [
+                        'id' => $r['id'],
+                        'user_name' => $u ? $u['name'] : 'Seeker',
+                        'rating' => intval($r['rating']),
+                        'comment' => $r['review'],
+                        'status' => 1
+                    ];
+                }
+                break;
             default:
                 $this->_json(['error' => 'Invalid collection'], 400);
                 return;
@@ -319,6 +436,18 @@ class Api extends CI_Controller {
                 break;
             case 'blogs':
                 $this->save_blog();
+                break;
+            case 'coupons':
+                $this->save_coupon();
+                break;
+            case 'settings':
+                $this->save_setting();
+                break;
+            case 'seo':
+                $this->save_seo();
+                break;
+            case 'ticket_replies':
+                $this->save_ticket_reply();
                 break;
             default:
                 $this->_json(['status' => false], 400);
@@ -599,6 +728,91 @@ class Api extends CI_Controller {
         $this->_json($this->_map_blog($this->blog_model->get_by_id($id)));
     }
 
+    private function save_coupon() {
+        $input = json_decode($this->input->raw_input_stream, true) ?: $this->input->post(NULL, TRUE);
+        if (!$input || empty($input['code'])) {
+            $this->_json(['status' => false, 'message' => 'Coupon code is required'], 400);
+            return;
+        }
+        $id = isset($input['id']) ? $input['id'] : null;
+        $db_data = [
+            'code' => strtoupper(trim(strip_tags($input['code']))),
+            'discount_type' => isset($input['discount_type']) ? trim(strip_tags($input['discount_type'])) : 'percentage',
+            'discount_value' => isset($input['value']) ? floatval($input['value']) : 0.00,
+            'start_date' => date('Y-m-d'),
+            'end_date' => isset($input['expiry']) ? $input['expiry'] : date('Y-m-d', strtotime('+30 days')),
+            'status' => isset($input['status']) ? intval($input['status']) : 1
+        ];
+        if ($id && is_numeric($id)) {
+            $this->coupon_model->update($id, $db_data);
+        } else {
+            $id = $this->coupon_model->insert($db_data);
+        }
+        $this->_json(['status' => true, 'message' => 'Coupon saved successfully', 'data' => $this->coupon_model->get_by_id($id)]);
+    }
+
+    private function save_setting() {
+        $input = json_decode($this->input->raw_input_stream, true) ?: $this->input->post(NULL, TRUE);
+        if (!$input || empty($input['key'])) {
+            $this->_json(['status' => false, 'message' => 'Setting key is required'], 400);
+            return;
+        }
+        $id = isset($input['id']) ? $input['id'] : null;
+        $db_data = [
+            'setting_key' => trim(strip_tags($input['key'])),
+            'setting_value' => trim(strip_tags($input['value']))
+        ];
+        if ($id && is_numeric($id)) {
+            $this->setting_model->update($id, $db_data);
+        } else {
+            $id = $this->setting_model->insert($db_data);
+        }
+        $this->_json(['status' => true, 'message' => 'Setting saved successfully', 'data' => $this->setting_model->get_by_id($id)]);
+    }
+
+    private function save_seo() {
+        $input = json_decode($this->input->raw_input_stream, true) ?: $this->input->post(NULL, TRUE);
+        if (!$input || empty($input['page'])) {
+            $this->_json(['status' => false, 'message' => 'Page name is required'], 400);
+            return;
+        }
+        $id = isset($input['id']) ? $input['id'] : null;
+        $db_data = [
+            'page_name' => trim(strip_tags($input['page'])),
+            'meta_title' => trim(strip_tags($input['title'])),
+            'meta_description' => trim(strip_tags($input['desc']))
+        ];
+        if ($id && is_numeric($id)) {
+            $this->seo_setting_model->update($id, $db_data);
+        } else {
+            $id = $this->seo_setting_model->insert($db_data);
+        }
+        $this->_json(['status' => true, 'message' => 'SEO Settings saved successfully', 'data' => $this->seo_setting_model->get_by_id($id)]);
+    }
+
+    private function save_ticket_reply() {
+        $input = json_decode($this->input->raw_input_stream, true) ?: $this->input->post(NULL, TRUE);
+        if (!$input || empty($input['ticket_id']) || empty($input['message'])) {
+            $this->_json(['status' => false, 'message' => 'Ticket ID and message are required'], 400);
+            return;
+        }
+        $ticket_id = intval($input['ticket_id']);
+        
+        $db_data = [
+            'ticket_id' => $ticket_id,
+            'user_id' => $this->session->userdata('user_id') ?: 1,
+            'message' => trim(strip_tags($input['message']))
+        ];
+        
+        $id = $this->ticket_reply_model->insert($db_data);
+        
+        // Also update ticket status
+        $status = isset($input['status']) ? trim(strip_tags($input['status'])) : 'open';
+        $this->support_ticket_model->update($ticket_id, ['status' => $status]);
+        
+        $this->_json(['status' => true, 'message' => 'Reply sent successfully', 'data' => $this->ticket_reply_model->get_by_id($id)]);
+    }
+
     /**
      * Delete an item in a collection.
      */
@@ -643,6 +857,30 @@ class Api extends CI_Controller {
                 break;
             case 'blogs':
                 $status = $this->blog_model->delete($id);
+                break;
+            case 'invoices':
+                $status = $this->invoice_model->delete($id);
+                break;
+            case 'payments':
+                $status = $this->payment_model->delete($id);
+                break;
+            case 'coupons':
+                $status = $this->coupon_model->delete($id);
+                break;
+            case 'tickets':
+                $status = $this->support_ticket_model->delete($id);
+                break;
+            case 'referrals':
+                $status = $this->referral_model->delete($id);
+                break;
+            case 'settings':
+                $status = $this->setting_model->delete($id);
+                break;
+            case 'seo':
+                $status = $this->seo_setting_model->delete($id);
+                break;
+            case 'testimonials':
+                $status = $this->review_model->delete($id);
                 break;
             default:
                 $this->_json(['status' => false], 400);

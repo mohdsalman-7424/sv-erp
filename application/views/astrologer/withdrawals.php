@@ -27,7 +27,7 @@ $unpaid_balance = $completed_count * 350.00;
     <div class="card-body">
       <div class="card-title">Request Withdrawal</div>
       
-      <form method="POST" action="<?= site_url('astrologer/request-withdrawal') ?>">
+      <form id="withdrawalForm" class="ajax-form" method="POST" action="<?= site_url('astrologer/request-withdrawal') ?>">
         <?= csrf_field() ?>
         <div class="form-group" style="margin-bottom:14px">
           <label class="form-label">Withdrawal Amount (₹) <span class="req">*</span></label>
@@ -62,7 +62,7 @@ $unpaid_balance = $completed_count * 350.00;
   <div class="card">
     <div class="card-body">
       <div class="card-title">Withdrawal Requests Status</div>
-      <table class="table">
+      <table class="data-table">
         <thead>
           <tr>
             <th>Date</th>
@@ -83,3 +83,18 @@ $unpaid_balance = $completed_count * 350.00;
   </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  if ($.isFunction($.fn.validate)) {
+    $('#withdrawalForm').validate({
+      rules: {
+        amount: { required: true, number: true, min: 100, max: <?= floatval($unpaid_balance) ?> },
+        account_name: { required: true, minlength: 3 },
+        account_no: { required: true, minlength: 9 },
+        ifsc_code: { required: true, minlength: 11 }
+      }
+    });
+  }
+});
+</script>

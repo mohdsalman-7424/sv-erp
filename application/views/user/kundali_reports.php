@@ -20,7 +20,7 @@ $kundalis = $CI->kundali_model->get_where(['user_id' => $current_user['id']]);
   <div class="card-body">
     <div class="card-title">Generated Birth Charts</div>
     <div class="table-responsive">
-      <table class="table">
+      <table class="data-table">
         <thead>
           <tr>
             <th>Name</th>
@@ -65,7 +65,7 @@ $kundalis = $CI->kundali_model->get_where(['user_id' => $current_user['id']]);
       <div class="modal-title">Generate Janam Kundali</div>
       <button class="modal-close" onclick="document.getElementById('kundaliModal').classList.remove('open')">✕</button>
     </div>
-    <form method="POST" action="<?= site_url('user/save-kundali') ?>">
+    <form id="generateKundaliForm" class="ajax-form" method="POST" action="<?= site_url('user/save-kundali') ?>">
       <?= csrf_field() ?>
       <div class="form-group" style="margin-bottom:12px">
         <label class="form-label">Name <span class="req">*</span></label>

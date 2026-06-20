@@ -55,11 +55,23 @@ class Astrologer_dashboard extends CI_Controller {
         $base = $this->_base();
         $astro = $base['current_astro'];
 
+        $msg = '';
+        $new_status = 0;
         if (!empty($astro)) {
             $this->load->model('astrologer_model');
             $new_status = $astro['is_online'] ? 0 : 1;
             $this->astrologer_model->update($astro['id'], ['is_online' => $new_status]);
-            $this->session->set_flashdata('success', $new_status ? 'You are now Online!' : 'You are now Offline.');
+            $msg = $new_status ? 'You are now Online!' : 'You are now Offline.';
+            $this->session->set_flashdata('success', $msg);
+        }
+
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg,
+                'is_online' => $new_status
+            ]));
+            return;
         }
 
         redirect('astrologer');
@@ -101,7 +113,16 @@ class Astrologer_dashboard extends CI_Controller {
             ]);
         }
 
-        $this->session->set_flashdata('success', 'Profile settings saved successfully!');
+        $msg = 'Profile settings saved successfully!';
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg
+            ]));
+            return;
+        }
+
+        $this->session->set_flashdata('success', $msg);
         redirect('astrologer/profile');
     }
 
@@ -133,7 +154,17 @@ class Astrologer_dashboard extends CI_Controller {
             'status'        => 1
         ]);
 
-        $this->session->set_flashdata('success', 'New service plan published successfully!');
+        $msg = 'New service plan published successfully!';
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg,
+                'redirect' => site_url('astrologer/service-plans')
+            ]));
+            return;
+        }
+
+        $this->session->set_flashdata('success', $msg);
         redirect('astrologer/service-plans');
     }
 
@@ -143,7 +174,15 @@ class Astrologer_dashboard extends CI_Controller {
         $astro_id = !empty($astro) ? $astro['id'] : 0;
 
         $this->db->delete('astrologer_plans', ['id' => intval($id), 'astrologer_id' => $astro_id]);
-        $this->session->set_flashdata('success', 'Service plan removed.');
+        $msg = 'Service plan removed.';
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg
+            ]));
+            return;
+        }
+        $this->session->set_flashdata('success', $msg);
         redirect('astrologer/service-plans');
     }
 
@@ -193,7 +232,12 @@ class Astrologer_dashboard extends CI_Controller {
 
         $this->form_validation->set_rules('prediction', 'Prediction', 'required|trim|min_length[10]|max_length[5000]');
         if ($this->form_validation->run() === FALSE) {
-            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            $error = strip_tags(validation_errors(' ', ' '));
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'error' => $error]));
+                return;
+            }
+            $this->session->set_flashdata('error', $error);
             redirect('astrologer/predictions');
         }
 
@@ -202,12 +246,26 @@ class Astrologer_dashboard extends CI_Controller {
 
         $record = $this->prediction_model->get_by_id(intval($id));
         if (empty($record) || (int) $record['astrologer_id'] !== (int) $astro_id) {
-            $this->session->set_flashdata('error', 'Prediction not found or access denied.');
+            $error = 'Prediction not found or access denied.';
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'error' => $error]));
+                return;
+            }
+            $this->session->set_flashdata('error', $error);
             redirect('astrologer/predictions');
         }
         
         $this->prediction_model->update(intval($id), ['prediction' => $prediction]);
-        $this->session->set_flashdata('success', 'Prediction reply sent to seeker.');
+        $msg = 'Prediction reply sent to seeker.';
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg,
+                'redirect' => site_url('astrologer/predictions')
+            ]));
+            return;
+        }
+        $this->session->set_flashdata('success', $msg);
         redirect('astrologer/predictions');
     }
 
@@ -227,7 +285,16 @@ class Astrologer_dashboard extends CI_Controller {
     }
 
     public function request_withdrawal() {
-        $this->session->set_flashdata('success', 'Withdrawal request submitted successfully! Funds will credit in 48 working hours.');
+        $msg = 'Withdrawal request submitted successfully! Funds will credit in 48 working hours.';
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg,
+                'redirect' => site_url('astrologer/withdrawals')
+            ]));
+            return;
+        }
+        $this->session->set_flashdata('success', $msg);
         redirect('astrologer/withdrawals');
     }
 
@@ -253,7 +320,16 @@ class Astrologer_dashboard extends CI_Controller {
             'end_time'      => $end_time
         ]);
 
-        $this->session->set_flashdata('success', 'Weekly availability slot added successfully.');
+        $msg = 'Weekly availability slot added successfully.';
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg,
+                'redirect' => site_url('astrologer/calendar')
+            ]));
+            return;
+        }
+        $this->session->set_flashdata('success', $msg);
         redirect('astrologer/calendar');
     }
 
@@ -263,7 +339,15 @@ class Astrologer_dashboard extends CI_Controller {
         $astro_id = !empty($astro) ? $astro['id'] : 0;
 
         $this->db->delete('astrologer_availability', ['id' => intval($id), 'astrologer_id' => $astro_id]);
-        $this->session->set_flashdata('success', 'Availability slot removed.');
+        $msg = 'Availability slot removed.';
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg
+            ]));
+            return;
+        }
+        $this->session->set_flashdata('success', $msg);
         redirect('astrologer/calendar');
     }
 
@@ -303,7 +387,17 @@ class Astrologer_dashboard extends CI_Controller {
             'status'    => 'open'
         ]);
 
-        $this->session->set_flashdata('success', 'Support ticket ' . $ticket_no . ' created successfully!');
+        $msg = 'Support ticket ' . $ticket_no . ' created successfully!';
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg,
+                'redirect' => site_url('astrologer/support')
+            ]));
+            return;
+        }
+
+        $this->session->set_flashdata('success', $msg);
         redirect('astrologer/support');
     }
 }

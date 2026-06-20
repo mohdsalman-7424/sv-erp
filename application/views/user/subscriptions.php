@@ -87,10 +87,10 @@ $balance = !empty($wallet) ? $wallet[0]['balance'] : 0.00;
           <?php if ($is_subscribed): ?>
             <button class="btn btn-secondary w-100" disabled>Active Plan</button>
           <?php else: ?>
-            <form method="POST" action="<?= site_url('user/purchase-plan') ?>">
+            <form class="ajax-form purchase-plan-form" method="POST" action="<?= site_url('user/purchase-plan') ?>" data-plan-name="<?= html_escape($p['name']) ?>" data-plan-price="₹<?= number_format($p['price'], 2) ?>">
               <?= csrf_field() ?>
               <input type="hidden" name="plan_id" value="<?= $p['id'] ?>">
-              <button type="submit" class="btn btn-primary w-100" onclick="return confirm('Subscribe to <?= html_escape($p['name']) ?> for ₹<?= number_format($p['price'], 2) ?>?')">
+              <button type="submit" class="btn btn-primary w-100">
                 Subscribe Now
               </button>
             </form>
@@ -102,3 +102,29 @@ $balance = !empty($wallet) ? $wallet[0]['balance'] : 0.00;
     <div class="card" style="grid-column: span 3"><div class="card-body" style="text-align:center;color:var(--text-muted)">No plans available.</div></div>
   <?php endif; ?>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  $('.purchase-plan-form').on('submit', function(e) {
+    const $form = $(this);
+    const planName = $form.data('plan-name');
+    const planPrice = $form.data('plan-price');
+    
+    if ($form.data('confirmed')) {
+      return true;
+    }
+    
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    
+    AppNotification.confirm({
+      title: 'Subscribe to Plan?',
+      text: `Are you sure you want to subscribe to ${planName} for ${planPrice}?`,
+      confirmButtonText: 'Yes, Subscribe!'
+    }, function() {
+      $form.data('confirmed', true);
+      $form.submit();
+    });
+  });
+});
+</script>

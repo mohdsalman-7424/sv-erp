@@ -104,7 +104,12 @@ class User_dashboard extends CI_Controller {
         $this->form_validation->set_rules('pincode', 'Pincode', 'trim|regex_match[/^[0-9A-Za-z\- ]{0,10}$/]');
 
         if ($this->form_validation->run() === FALSE) {
-            $this->session->set_flashdata('error', strip_tags(validation_errors(' ', ' ')));
+            $error = strip_tags(validation_errors(' ', ' '));
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'error' => $error]));
+                return;
+            }
+            $this->session->set_flashdata('error', $error);
             redirect('user/profile');
         }
 
@@ -165,7 +170,16 @@ class User_dashboard extends CI_Controller {
             $this->user_address_model->insert($address_data);
         }
 
-        $this->session->set_flashdata('success', 'Profile updated successfully!');
+        $msg = 'Profile updated successfully!';
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg
+            ]));
+            return;
+        }
+
+        $this->session->set_flashdata('success', $msg);
         redirect('user/profile');
     }
 
@@ -185,7 +199,12 @@ class User_dashboard extends CI_Controller {
         $plan = $this->subscription_plan_model->get_by_id($plan_id);
 
         if (!$plan) {
-            $this->session->set_flashdata('error', 'Plan not found.');
+            $error = 'Plan not found.';
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'error' => $error]));
+                return;
+            }
+            $this->session->set_flashdata('error', $error);
             redirect('user/subscriptions');
         }
 
@@ -193,7 +212,12 @@ class User_dashboard extends CI_Controller {
         $balance = !empty($wallet) ? $wallet[0]['balance'] : 0.00;
 
         if ($balance < $plan['price']) {
-            $this->session->set_flashdata('error', 'Insufficient wallet balance. Please recharge.');
+            $error = 'Insufficient wallet balance. Please recharge.';
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'error' => $error]));
+                return;
+            }
+            $this->session->set_flashdata('error', $error);
             redirect('user/wallet');
         }
 
@@ -238,7 +262,17 @@ class User_dashboard extends CI_Controller {
             'payment_status' => 'Paid'
         ]);
 
-        $this->session->set_flashdata('success', 'Successfully subscribed to ' . $plan['name'] . '!');
+        $msg = 'Successfully subscribed to ' . $plan['name'] . '!';
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg,
+                'redirect' => site_url('user/subscriptions')
+            ]));
+            return;
+        }
+
+        $this->session->set_flashdata('success', $msg);
         redirect('user/subscriptions');
     }
 
@@ -279,7 +313,17 @@ class User_dashboard extends CI_Controller {
             'longitude'   => $longitude
         ]);
 
-        $this->session->set_flashdata('success', 'Janam Kundali generated successfully!');
+        $msg = 'Janam Kundali generated successfully!';
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg,
+                'redirect' => site_url('user/kundali-reports')
+            ]));
+            return;
+        }
+
+        $this->session->set_flashdata('success', $msg);
         redirect('user/kundali-reports');
     }
 
@@ -306,7 +350,17 @@ class User_dashboard extends CI_Controller {
             'report'            => 'Gun Milan score calculated at ' . $guna_score . '. Compatibility report completed.'
         ]);
 
-        $this->session->set_flashdata('success', 'Compatibility match computed successfully!');
+        $msg = 'Compatibility match computed successfully!';
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg,
+                'redirect' => site_url('user/kundali-matching')
+            ]));
+            return;
+        }
+
+        $this->session->set_flashdata('success', $msg);
         redirect('user/kundali-matching');
     }
 
@@ -341,7 +395,17 @@ class User_dashboard extends CI_Controller {
             'status'            => 'booked'
         ]);
 
-        $this->session->set_flashdata('success', 'Consultation scheduled successfully!');
+        $msg = 'Consultation scheduled successfully!';
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg,
+                'redirect' => site_url('user/consultations')
+            ]));
+            return;
+        }
+
+        $this->session->set_flashdata('success', $msg);
         redirect('user/consultations');
     }
 
@@ -354,7 +418,12 @@ class User_dashboard extends CI_Controller {
     }
 
     public function recharge_wallet() {
-        $this->session->set_flashdata('error', 'Wallet recharge requires a verified payment gateway. Direct balance credits are disabled for security.');
+        $error = 'Wallet recharge requires a verified payment gateway. Direct balance credits are disabled for security.';
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'error' => $error]));
+            return;
+        }
+        $this->session->set_flashdata('error', $error);
         redirect('user/wallet');
     }
 
@@ -390,7 +459,17 @@ class User_dashboard extends CI_Controller {
             'status'    => 'open'
         ]);
 
-        $this->session->set_flashdata('success', 'Support ticket ' . $ticket_no . ' created successfully!');
+        $msg = 'Support ticket ' . $ticket_no . ' created successfully!';
+        if ($this->input->is_ajax_request()) {
+            $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status' => true,
+                'message' => $msg,
+                'redirect' => site_url('user/support')
+            ]));
+            return;
+        }
+
+        $this->session->set_flashdata('success', $msg);
         redirect('user/support');
     }
 

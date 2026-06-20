@@ -32,7 +32,7 @@ $astrologers = $CI->db->get()->result_array();
   <div class="card-body">
     <div class="card-title">Consultation History</div>
     <div class="table-responsive">
-      <table class="table">
+      <table class="data-table">
         <thead>
           <tr>
             <th>ID</th>
@@ -83,7 +83,7 @@ $astrologers = $CI->db->get()->result_array();
       <div class="modal-title">Book a Consultation</div>
       <button class="modal-close" onclick="document.getElementById('bookingModal').classList.remove('open')">✕</button>
     </div>
-    <form method="POST" action="<?= site_url('user/book-consultation') ?>">
+    <form id="bookingForm" class="ajax-form" method="POST" action="<?= site_url('user/book-consultation') ?>">
       <?= csrf_field() ?>
       <div class="form-group" style="margin-bottom:14px">
         <label class="form-label">Select Astrologer <span class="req">*</span></label>
